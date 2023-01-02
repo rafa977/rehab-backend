@@ -24,10 +24,16 @@ func (s *Service) RegisterHandlers(route *mux.Router) {
 }
 
 func Handle(route *mux.Router) {
-	route.HandleFunc("/registerAccount", userRegistration)
+	sub := route.PathPrefix("/user").Subrouter()
+
+	sub.HandleFunc("/registerAccount", accountRegistration)
+	sub.HandleFunc("/login", login)
+	sub.HandleFunc("/getAccountById", getAccountById)
+	sub.HandleFunc("/deleteAccountById", deleteAccountById)
+
 }
 
-func userRegistration(w http.ResponseWriter, r *http.Request) {
+func accountRegistration(w http.ResponseWriter, r *http.Request) {
 
 	var account models.Account
 
@@ -51,4 +57,16 @@ func userRegistration(w http.ResponseWriter, r *http.Request) {
 
 	// Do something with the Person struct...
 	fmt.Fprintf(w, "Account: %+v", account.Username)
+}
+
+func login(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Login!")
+}
+
+func getAccountById(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Get account data!")
+}
+
+func deleteAccountById(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Delete account!")
 }
