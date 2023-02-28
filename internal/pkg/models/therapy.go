@@ -7,7 +7,7 @@ import (
 )
 
 type Therapy struct {
-	bun.BaseModel `bun:"table:therapies ,alias:th"`
+	bun.BaseModel `bun:"table:therapies,alias:th"`
 
 	TherapyID          string `bun:",pk,autoincrement"`
 	UserID             string `bun:"user_id,notnull" json:"user_id" validate:"required"`

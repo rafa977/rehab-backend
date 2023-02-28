@@ -5,7 +5,7 @@ import (
 )
 
 type Disorders struct {
-	bun.BaseModel `bun:"table:disorders ,alias:dsrdr"`
+	bun.BaseModel `bun:"table:disorders,alias:dsrdr"`
 
 	DisorderID          string `bun:",pk,autoincrement"`
 	DisorderTitle       string `bun:"disorder_title,notnull" json:"disorder_title" validate:"required"`

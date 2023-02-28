@@ -5,7 +5,7 @@ import (
 )
 
 type Drugs struct {
-	bun.BaseModel `bun:"table:drugs ,alias:drgs"`
+	bun.BaseModel `bun:"table:drugs,alias:drgs"`
 
 	DrugID          string `bun:",pk,autoincrement"`
 	DrugTitle       string `bun:"drug_title,notnull" json:"drug_title" validate:"required"`

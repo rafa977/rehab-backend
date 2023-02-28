@@ -1,23 +1,23 @@
 ------------------ PERSONAL DATA -----------------------
 CREATE TABLE accounts (
-	user_id INT,
+	user_id SERIAL PRIMARY KEY,
 	username VARCHAR ( 50 ) UNIQUE NOT NULL,
 	password VARCHAR ( 250 ) NOT NULL,
 	email VARCHAR ( 255 ) UNIQUE NOT NULL,
-	firstname VARCHAR ( 50 ) NOT NULL,
-	lastname VARCHAR ( 50 ) NOT NULL,
-	address VARCHAR ( 50 ) NOT NULL,
-	job VARCHAR ( 50 ) NOT NULL,
-	age VARCHAR ( 50 ) NOT NULL,
-	amka VARCHAR ( 50 ) NOT NULL,
+	user_type VARCHAR (10),
+	firstname VARCHAR ( 50 ) ,
+	lastname VARCHAR ( 50 ) ,
+	address VARCHAR ( 50 ) ,
+	job VARCHAR ( 50 ) ,
+	age VARCHAR ( 50 ) ,
+	amka VARCHAR ( 50 ) ,
 	created_on TIMESTAMP NOT NULL,
-    last_login TIMESTAMP,
-	PRIMARY KEY(user_id)
+    last_login TIMESTAMP
 );
 
 ------------------ HOW DID YOU FIND US -----------------
 CREATE TABLE reach_out (
-	reach_id INT,
+	reach_id SERIAL PRIMARY KEY,
 	user_id INT,
 	how_know VARCHAR (250), 
 	person BOOLEAN,
@@ -25,7 +25,6 @@ CREATE TABLE reach_out (
 	person_lastname VARCHAR (50),
 	website VARCHAR (50),
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(reach_id),
 	CONSTRAINT fk_user_id
 	FOREIGN KEY(user_id)
 	REFERENCES accounts(user_id)
@@ -35,7 +34,7 @@ CREATE TABLE reach_out (
 
 ------------------ THERAPIES OF ANY TYPE ---------------
 CREATE TABLE therapies (
-	therapy_id INT,
+	therapy_id SERIAL PRIMARY KEY,
 	user_id INT,
 	therapy_title VARCHAR (50),
 	therapy_description VARCHAR (100),
@@ -45,7 +44,6 @@ CREATE TABLE therapies (
 	quantity SMALLINT,
 	frequency SMALLINT,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(therapy_id),
 	CONSTRAINT fk_user_id
 	FOREIGN KEY(user_id)
 	REFERENCES accounts(user_id)
@@ -53,14 +51,13 @@ CREATE TABLE therapies (
 );
 
 CREATE TABLE injuries (
-	injury_id INT,
+	injury_id SERIAL PRIMARY KEY,
 	user_id INT,
 	injury_title VARCHAR (50),
 	injury_description VARCHAR (100),
 	injury_date TIMESTAMP,
 	bposition_id INT,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(injury_id),
 	CONSTRAINT fk_user_id
 	FOREIGN KEY(user_id)
 	REFERENCES accounts(user_id)
@@ -68,7 +65,7 @@ CREATE TABLE injuries (
 );
 
 CREATE TABLE medical_therapies (
-	medical_therapy_id INT,
+	medical_therapy_id SERIAL PRIMARY KEY,
 	user_id INT,
 	medical_therapy_title VARCHAR (50),
 	medical_therapy_description VARCHAR (100),
@@ -77,7 +74,6 @@ CREATE TABLE medical_therapies (
 	quantity SMALLINT,
 	frequency SMALLINT,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(medical_therapy_id),
 	CONSTRAINT fk_user_id
 	FOREIGN KEY(user_id)
 	REFERENCES accounts(user_id)
@@ -85,12 +81,11 @@ CREATE TABLE medical_therapies (
 );
 
 CREATE TABLE personal_allergies (
-	personal_allergies_id INT,
+	personal_allergies_id SERIAL PRIMARY KEY,
 	allergy_id INT,
 	user_id INT,
 	diagnosed_time TIMESTAMP,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(personal_allergies_id),
 	CONSTRAINT fk_allergy_id
 	FOREIGN KEY(allergy_id)
 	REFERENCES allergies(allergy_id)
@@ -102,7 +97,7 @@ CREATE TABLE personal_allergies (
 );
 
 CREATE TABLE drug_treatment (
-	drug_treatment_id INT,
+	drug_treatment_id SERIAL PRIMARY KEY,
 	drug_id INT,
 	user_id INT,
 	from_date TIMESTAMP,
@@ -110,7 +105,6 @@ CREATE TABLE drug_treatment (
 	quantity SMALLINT,
 	frequency SMALLINT,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(drug_treatment_id),
 	CONSTRAINT fk_drug_id
 	FOREIGN KEY(drug_id)
 	REFERENCES drugs(drug_id)
@@ -122,7 +116,7 @@ CREATE TABLE drug_treatment (
 );
 
 CREATE TABLE personal_disorders (
-	personal_disorder_id INT,
+	personal_disorder_id SERIAL PRIMARY KEY,
 	disorder_id INT,
 	user_id INT,
 	from_date TIMESTAMP,
@@ -130,7 +124,6 @@ CREATE TABLE personal_disorders (
 	quantity SMALLINT,
 	frequency SMALLINT,
 	created_on TIMESTAMP NOT NULL,
-	PRIMARY KEY(personal_disorder_id),
 	CONSTRAINT fk_disorder_id
 	FOREIGN KEY(disorder_id)
 	REFERENCES disorders(disorder_id)
@@ -143,33 +136,29 @@ CREATE TABLE personal_disorders (
 --------------------------------------------------------
 
 CREATE TABLE allergies (
-	allergy_id INT,
+	allergy_id SERIAL PRIMARY KEY,
 	allergy_title VARCHAR (50),
 	allergy_description VARCHAR (100),
-	allergy_notes VARCHAR (200),
-	PRIMARY KEY(allergy_id)
+	allergy_notes VARCHAR (200)
 );
 
 CREATE TABLE body_positions (
-	bposition_id INT,
+	bposition_id SERIAL PRIMARY KEY,
 	bposition_title VARCHAR (50),
 	bposition_description VARCHAR (100),
-	bposition_notes VARCHAR (150),
-	PRIMARY KEY(bposition_id)
+	bposition_notes VARCHAR (150)
 );
 
 CREATE TABLE drugs (
-	drug_id INT,
+	drug_id SERIAL PRIMARY KEY,
 	drug_title VARCHAR (50),
 	drug_description VARCHAR (100),
-	drug_notes VARCHAR (200),
-	PRIMARY KEY(drug_id),
+	drug_notes VARCHAR (200)
 );
 
 CREATE TABLE disorders (
-	disorder_id INT,
+	disorder_id SERIAL PRIMARY KEY,
 	disorder_title VARCHAR (50),
 	disorder_description VARCHAR (100),
-	disorder_notes VARCHAR (200),
-	PRIMARY KEY(disorder_id)
+	disorder_notes VARCHAR (200)
 );

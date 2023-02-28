@@ -7,9 +7,9 @@ import (
 )
 
 type Injury struct {
-	bun.BaseModel `bun:"table:injuries ,alias:inj"`
+	bun.BaseModel `bun:"table:injuries,alias:inj"`
 
-	InjuryID          string `bun:",pk,autoincrement"`
+	InjuryID          string `bun:"injury_id,pk,autoincrement"`
 	UserID            string `bun:"user_id,notnull" json:"user_id" validate:"required"`
 	InjuryTitle       string `bun:"injury_title,notnull" json:"injury_title" validate:"required"`
 	InjuryDescription string `bun:"injury_description" json:"injury_description" `

@@ -9,7 +9,7 @@ import (
 type Account struct {
 	bun.BaseModel `bun:"table:accounts,alias:ac"`
 
-	UserID    string `bun:",pk,autoincrement"`
+	UserID    string `bun:"user_id,pk,autoincrement"`
 	Username  string `bun:"username,notnull" json:"username" validate:"required"`
 	Password  string `bun:"password,notnull" json:"password" validate:"required"`
 	Firstname string `bun:"firstname,notnull" json:"firstname" validate:"required"`

@@ -53,7 +53,7 @@ func (s *Service) Handle(route *mux.Router) {
 }
 
 func (s *Service) accountRegistration(w http.ResponseWriter, r *http.Request) {
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	// currentDate := time.Now().Format("2006-01-02 15:04:05")
 
 	var account models.Account
 
@@ -80,7 +80,7 @@ func (s *Service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	account.Password = hashedPassword
-	account.CreatedOn = currentDate
+	account.CreatedOn = time.Now()
 
 	ctx := context.Background()
 
@@ -209,7 +209,7 @@ func (s *Service) login(w http.ResponseWriter, r *http.Request) {
 
 	if passwordValid {
 
-		retrievedAccount.LastLogin = currentDate
+		retrievedAccount.LastLogin = time.Now()
 
 		_, err = s.dbConnection.NewUpdate().Model(&retrievedAccount).Column("last_login").Where("username = ?", account.Username).Exec(ctx)
 

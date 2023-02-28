@@ -5,7 +5,7 @@ import (
 )
 
 type Allergy struct {
-	bun.BaseModel `bun:"table:allergies ,alias:all"`
+	bun.BaseModel `bun:"table:allergies,alias:all"`
 
 	AllergyID          string `bun:",pk,autoincrement"`
 	AllergyTitle       string `bun:"allergy_title,notnull" json:"allergy_title" validate:"required"`

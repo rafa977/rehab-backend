@@ -5,7 +5,7 @@ import (
 )
 
 type BodyPositions struct {
-	bun.BaseModel `bun:"table:body_positions ,alias:bdpst"`
+	bun.BaseModel `bun:"table:body_positions,alias:bdpst"`
 
 	DisorderID           string `bun:",pk,autoincrement"`
 	BpositionTitle       string `bun:"bposition_title,notnull" json:"bposition_title" validate:"required"`
