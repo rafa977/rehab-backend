@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -53,17 +54,6 @@ func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(patient.Account.UserID)
-
-	// var account models.Account
-	// account = patient.Account
-
-	// var injury models.Injury
-	// injury = patient.Injury[0]
-
-	// var medTherapy models.MedicalTherapy
-	// medTherapy = patient.MedicalTherapy[0]
-
 	isValid, errors := handlers.ValidateInputs(patient)
 	if !isValid {
 		for _, fieldError := range errors {
@@ -86,20 +76,7 @@ func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(patient.Account)
-
-	for i := range patient.Injury {
-		patient.Injury[i].UserID = patient.Account.UserID
-	}
-	for i := range patient.MedicalTherapy {
-		patient.MedicalTherapy[i].UserID = patient.Account.UserID
-	}
-	for i := range patient.PersonalDisorder {
-		patient.PersonalDisorder[i].UserID = patient.Account.UserID
-	}
-	for i := range patient.DrugTreatment {
-		patient.DrugTreatment[i].UserID = patient.Account.UserID
-	}
+	updateField(&patient, "UserID", patient.Account.UserID)
 
 	_, err = tx.NewInsert().Model(&patient.Injury).Exec(ctx)
 	if err != nil {
@@ -155,9 +132,46 @@ func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Commit the transaction if all parts of it succeed
 	err = tx.Commit()
-
-	fmt.Println(patient)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Fprintf(w, "Registration of Account - Successful")
+}
+
+// Function to update the UserID field in the PatientPersonal struct
+func updateField(p *models.PatientPersonal, key string, value string) {
+	// Get the reflect value of the PatientPersonal struct
+	reflectValue := reflect.ValueOf(p).Elem()
+
+	// Loop through each field in the struct
+	for i := 0; i < reflectValue.NumField(); i++ {
+		field := reflectValue.Field(i)
+
+		// Check if the field is a slice
+		if field.Kind() == reflect.Slice {
+			// Loop through each element in the slice
+			for j := 0; j < field.Len(); j++ {
+				elem := field.Index(j)
+
+				// Check if the element has a UserID field
+				userIDField := elem.FieldByName(key)
+				// if userIDField.IsValid() && userIDField.String() == key {
+				if userIDField.IsValid() {
+					// Update the UserID field with the new value
+					userIDField.SetString(value)
+				}
+			}
+		} else {
+			// Check if the field has a UserID field
+			userIDField := field.FieldByName(key)
+			// if userIDField.IsValid() && userIDField.String() == key {
+			if userIDField.IsValid() {
+				// Update the UserID field with the new value
+				userIDField.SetString(value)
+			}
+		}
+	}
 }
