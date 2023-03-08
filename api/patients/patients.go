@@ -9,8 +9,10 @@ import (
 	"reflect"
 	"time"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	config "github.com/rehab-backend/config/database"
+	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
 	"github.com/rehab-backend/internal/pkg/models"
 	"github.com/uptrace/bun"
@@ -36,9 +38,61 @@ func (s *Service) RegisterHandlers(route *mux.Router) {
 }
 
 func (s *Service) Handle(route *mux.Router) {
+
 	sub := route.PathPrefix("/patient").Subrouter()
 
 	sub.HandleFunc("/registerPatient", s.patientRegistration)
+	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData)).Methods("GET")
+}
+
+func (s *Service) getPatientData(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var account models.Account
+	var response models.Response
+
+	username := gcontext.Get(r, "username").(string)
+
+	var retrievedAccount models.Account
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		response.Status = "error"
+		response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(response)
+
+		return
+	}
+
+	ctx := context.Background()
+
+	err = s.dbConnection.NewSelect().Model(&account).Where("user_id = ?", id).Scan(ctx, &retrievedAccount)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if retrievedAccount.Username != username {
+		http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	response.Status = "success"
+	response.Message = username
+	response.Response = string("Hello")
+	json.NewEncoder(w).Encode(response)
+
 }
 
 func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {

@@ -3,13 +3,12 @@ package accounts
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	config "github.com/rehab-backend/config/database"
 	"github.com/rehab-backend/internal/pkg/handlers"
@@ -94,81 +93,6 @@ func (s *Service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Registration of Account - Successful")
 }
 
-var sampleSecretKey = []byte("SecretYouShouldHide")
-
-func generateJWT(username string) (string, time.Time, error) {
-
-	expTime := time.Now().Add(time.Minute * 60)
-
-	claims := &Claims{
-		Username:   username,
-		Authorized: "authorized",
-		RegisteredClaims: jwt.RegisteredClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
-			ExpiresAt: jwt.NewNumericDate(expTime),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	fmt.Println(claims)
-
-	tokenString, err := token.SignedString(sampleSecretKey)
-	if err != nil {
-		fmt.Println("here is the error")
-		return "", expTime, err
-	}
-
-	return tokenString, expTime, nil
-
-}
-
-func validateToken(w http.ResponseWriter, r *http.Request) (string, error) {
-
-	if r.Header["Authorization"] == nil {
-		fmt.Fprintf(w, "Authorization is required")
-		return "", errors.New("Authorization is required")
-	}
-
-	reqToken := r.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, "Bearer")
-	if len(splitToken) != 2 {
-		// Error: Bearer token not in proper format
-	}
-
-	reqToken = strings.TrimSpace(splitToken[1])
-
-	// Initialize a new instance of `Claims`
-	claims := &Claims{}
-
-	// Parse the JWT string and store the result in `claims`.
-	// Note that we are passing the key in this method as well. This method will return an error
-	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
-	// or if the signature does not match
-	tkn, err := jwt.ParseWithClaims(reqToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return sampleSecretKey, nil
-	})
-
-	username := claims.Username
-	fmt.Println(username)
-
-	fmt.Println(err)
-
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return "", errors.New("Invalid signature")
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return "", errors.New("Token is expired")
-	}
-	if !tkn.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
-		return "", errors.New("Token is invalid")
-	}
-
-	return username, nil
-}
-
 func (s *Service) login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -213,7 +137,7 @@ func (s *Service) login(w http.ResponseWriter, r *http.Request) {
 
 		_, err = s.dbConnection.NewUpdate().Model(&retrievedAccount).Column("last_login").Where("username = ?", account.Username).Exec(ctx)
 
-		token, expTime, hasError := generateJWT(account.Username)
+		token, expTime, hasError := handlers.GenerateJWT(account.Username)
 		if hasError != nil {
 			http.Error(w, hasError.Error(), http.StatusBadRequest)
 			return
@@ -260,18 +184,19 @@ func (s *Service) getAccountById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := validateToken(w, r)
-	if err != nil {
-		response.Status = "error"
-		response.Message = err.Error()
-		json.NewEncoder(w).Encode(response)
+	// username, err := handlers.ValidateToken(w, r)
+	// if err != nil {
+	// 	response.Status = "error"
+	// 	response.Message = err.Error()
+	// 	json.NewEncoder(w).Encode(response)
 
-		return
-	}
+	// 	return
+	// }
+	username := gcontext.Get(r, "username").(string)
 
 	ctx := context.Background()
 
-	err = s.dbConnection.NewSelect().Model(&account).Where("user_id = ?", id).Scan(ctx, &retrievedAccount)
+	err := s.dbConnection.NewSelect().Model(&account).Where("user_id = ?", id).Scan(ctx, &retrievedAccount)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
