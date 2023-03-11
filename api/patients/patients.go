@@ -1,60 +1,89 @@
 package patients
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	config "github.com/rehab-backend/config/database"
 	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
 	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/uptrace/bun"
+	"github.com/rehab-backend/internal/repository"
 )
 
-type Service struct {
-	*sql.Tx
-
-	dbConnection *bun.DB
+type service struct {
+	repository repository.PatientRepository
 }
 
-func NewService() *Service {
-	dbConnection := config.ConnectDB()
+func NewService() *service {
 
-	// return &Service{}
-	return &Service{dbConnection: dbConnection}
+	return &service{repository: repository.NewPatientService()}
 }
 
-func (s *Service) RegisterHandlers(route *mux.Router) {
+func (s *service) RegisterHandlers(route *mux.Router) {
 
 	s.Handle(route)
 
 }
 
-func (s *Service) Handle(route *mux.Router) {
+func (s *service) Handle(route *mux.Router) {
 
 	sub := route.PathPrefix("/patient").Subrouter()
 
-	sub.HandleFunc("/registerPatient", s.patientRegistration)
+	sub.HandleFunc("/registerPatient", middleware.AuthenticationMiddleware(s.patientRegistration)).Methods("POST")
 	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData)).Methods("GET")
+	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients)).Methods("GET")
+
 }
 
-func (s *Service) getPatientData(w http.ResponseWriter, r *http.Request) {
-
+func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var account models.Account
+	var patients []models.Patient
 	var response models.Response
 
 	username := gcontext.Get(r, "username").(string)
 
-	var retrievedAccount models.Account
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
+
+	patients, err := s.repository.GetAllPatients()
+	if err != nil {
+		response.Status = "error"
+		response.Message = "Unknown Username or Password"
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	response.Status = "success"
+	response.Message = username
+	response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
+
+}
+
+func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var patient models.Patient
+	var response models.Response
+
+	username := gcontext.Get(r, "username").(string)
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
@@ -68,21 +97,22 @@ func (s *Service) getPatientData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-
-	err = s.dbConnection.NewSelect().Model(&account).Where("user_id = ?", id).Scan(ctx, &retrievedAccount)
+	patient, err := s.repository.GetPatient(1)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Status = "error"
+		response.Message = "Unknown Username or Password"
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	if retrievedAccount.Username != username {
-		http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-		return
-	}
+	// if account.Username != username {
+	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
+	// 	return
+	// }
 
-	jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
+	jsonRetrievedAccount, err := json.Marshal(patient)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -90,16 +120,17 @@ func (s *Service) getPatientData(w http.ResponseWriter, r *http.Request) {
 
 	response.Status = "success"
 	response.Message = username
-	response.Response = string("Hello")
+	response.Response = string(jsonRetrievedAccount)
 	json.NewEncoder(w).Encode(response)
 
 }
 
-func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {
-	// currentDate := time.Now().Format("2006-01-02 15:04:05")
+func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var patient models.PatientPersonal
-
+	var patient models.Patient
+	var response models.Response
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&patient)
@@ -116,81 +147,94 @@ func (s *Service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	patient.CreatedOn = time.Now()
-	ctx := context.Background()
-
-	tx, err := s.dbConnection.BeginTx(ctx, &sql.TxOptions{})
-
-	_, err = tx.NewInsert().Model(&patient.Account).Exec(ctx)
+	patient, err = s.repository.AddPatient(patient)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
-
+		var newerr string
+		if strings.Contains(err.Error(), "users_company_email_key") {
+			newerr = "user already exists!"
+		} else {
+			newerr = "Bad Request"
+		}
+		response.Status = "error"
+		response.Message = newerr
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	updateField(&patient, "UserID", patient.Account.UserID)
+	// tx, err := s.dbConnection.BeginTx(ctx, &sql.TxOptions{})
 
-	_, err = tx.NewInsert().Model(&patient.Injury).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// _, err = tx.NewInsert().Model(&patient.Account).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-		return
-	}
+	// 	return
+	// }
 
-	_, err = tx.NewInsert().Model(&patient.Therapy).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// updateField(&patient, "UserID", patient.Account.UserID)
 
-		return
-	}
+	// _, err = tx.NewInsert().Model(&patient.Injury).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-	_, err = tx.NewInsert().Model(&patient.DrugTreatment).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// 	return
+	// }
 
-		return
-	}
+	// _, err = tx.NewInsert().Model(&patient.Therapy).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-	_, err = tx.NewInsert().Model(&patient.PersonalAllergy).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// 	return
+	// }
 
-		return
-	}
+	// _, err = tx.NewInsert().Model(&patient.DrugTreatment).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-	_, err = tx.NewInsert().Model(&patient.MedicalTherapy).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// 	return
+	// }
 
-		return
-	}
+	// _, err = tx.NewInsert().Model(&patient.PersonalAllergy).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-	_, err = tx.NewInsert().Model(&patient.PersonalDisorder).Exec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		err = tx.Rollback()
+	// 	return
+	// }
 
-		return
-	}
+	// _, err = tx.NewInsert().Model(&patient.MedicalTherapy).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
 
-	// Commit the transaction if all parts of it succeed
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
-	}
+	// 	return
+	// }
+
+	// _, err = tx.NewInsert().Model(&patient.PersonalDisorder).Exec(ctx)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	err = tx.Rollback()
+
+	// 	return
+	// }
+
+	// // Commit the transaction if all parts of it succeed
+	// err = tx.Commit()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	fmt.Fprintf(w, "Registration of Account - Successful")
 }

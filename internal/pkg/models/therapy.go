@@ -3,20 +3,20 @@ package models
 import (
 	"time"
 
-	"github.com/uptrace/bun"
+	"gorm.io/gorm"
 )
 
 type Therapy struct {
-	bun.BaseModel `bun:"table:therapies,alias:th"`
+	gorm.Model
 
-	TherapyID          string `bun:",pk,autoincrement"`
-	UserID             string `bun:"user_id,notnull" json:"user_id" validate:"required"`
-	TherapyTitle       string `bun:"therapy_title,notnull" json:"therapy_title" validate:"required"`
-	TherapyDescription string `bun:"therapy_description" json:"therapy_description" `
-	Diagnosis          string `bun:"diagnosis" json:"diagnosis" `
-	FromDate           string `bun:"from_date" json:"from_date" `
-	ToDate             string `bun:"to_date" json:"to_date" `
-	Quantity           string `bun:"quantity" json:"quantity" `
-	Frequency          string `bun:"frequency" json:"frequency" `
+	Patient            Patient `gorm:"foreignkey:PatientID;auto_preload"`
+	PatientID          string
+	TherapyTitle       string `json:"therapy_title" validate:"required"`
+	TherapyDescription string `json:"therapy_description" `
+	Diagnosis          string `json:"diagnosis" `
+	FromDate           string `json:"from_date" `
+	ToDate             string `json:"to_date" `
+	Quantity           string `json:"quantity" `
+	Frequency          string `json:"frequency" `
 	CreatedOn          time.Time
 }

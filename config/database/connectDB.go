@@ -1,16 +1,15 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/rehab-backend/internal/pkg/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func ConnectDB() *bun.DB {
+func ConnectDB() *gorm.DB {
 
 	var err error
 
@@ -20,14 +19,19 @@ func ConnectDB() *bun.DB {
 		log.Fatal(err.Error())
 	}
 
-	psqlconn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
+	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{})
+
+	// psqlconn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
 	// dsn := "unix://user:pass@dbname/var/run/postgresql/.s.PGSQL.5432"
-	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(psqlconn)))
+	// sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(psqlconn)))
 
-	db := bun.NewDB(sqldb, pgdialect.New())
+	// db := bun.NewDB(sqldb, pgdialect.New())
 
-	errPing := db.Ping()
-	fmt.Println(errPing)
+	// errPing := db.Ping()
+	// fmt.Println(errPing)
 
 	return db
 }
