@@ -30,7 +30,6 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		username, err := handlers.ValidateToken(tokenString)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-
 			response.Status = "error"
 			response.Message = "Authorization Failed"
 			response.Response = ""

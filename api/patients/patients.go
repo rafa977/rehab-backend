@@ -35,9 +35,9 @@ func (s *service) Handle(route *mux.Router) {
 
 	sub := route.PathPrefix("/patient").Subrouter()
 
-	sub.HandleFunc("/registerPatient", middleware.AuthenticationMiddleware(s.patientRegistration)).Methods("POST")
-	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData)).Methods("GET")
-	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients)).Methods("GET")
+	sub.HandleFunc("/registerPatient", s.patientRegistration)
+	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData))
+	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
 
 }
 

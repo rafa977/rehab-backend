@@ -160,9 +160,15 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 			Expires: expTime,
 		})
 
+		jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		response.Response = token
 		response.Status = "success"
-		response.Message = ""
+		response.Message = string(jsonRetrievedAccount)
 		json.NewEncoder(w).Encode(response)
 
 		return
