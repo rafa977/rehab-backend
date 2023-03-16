@@ -9,6 +9,8 @@ import (
 //ProductRepository --> Interface to ProductRepository
 type AccountsRepository interface {
 	GetAccountByID(int) (models.Account, error)
+	GetAccountByUsernameForLogin(string) (models.Account, error)
+	GetAccountByUsername(string) (models.Account, error)
 	UpdateAccount(models.Account) (models.Account, error)
 	AddUser(models.Account) (models.Account, error)
 }
@@ -25,7 +27,19 @@ func NewAccountService() *accountService {
 }
 
 func (db *accountService) GetAccountByID(id int) (account models.Account, err error) {
-	return account, db.dbConnection.First(&account, id).Error
+	return account, db.dbConnection.Omit("password").First(&account, id).Error
+}
+
+func (db *accountService) GetCompanyByAccountByID(id int) (account models.Account, err error) {
+	return account, db.dbConnection.Omit("password").First(&account, id).Error
+}
+
+func (db *accountService) GetAccountByUsernameForLogin(username string) (account models.Account, err error) {
+	return account, db.dbConnection.Where("username = ?", username).First(&account).Error
+}
+
+func (db *accountService) GetAccountByUsername(username string) (account models.Account, err error) {
+	return account, db.dbConnection.Omit("password").Where("username = ?", username).First(&account).Error
 }
 
 func (db *accountService) UpdateAccount(account models.Account) (models.Account, error) {

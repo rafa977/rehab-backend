@@ -9,7 +9,6 @@ import (
 type Therapy struct {
 	gorm.Model
 
-	Patient            Patient `gorm:"foreignkey:PatientID;auto_preload"`
 	PatientID          string
 	TherapyTitle       string `json:"therapy_title" validate:"required"`
 	TherapyDescription string `json:"therapy_description" `

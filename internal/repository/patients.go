@@ -9,8 +9,11 @@ import (
 //ProductRepository --> Interface to ProductRepository
 type PatientRepository interface {
 	GetPatient(int) (models.Patient, error)
+	GetPatientWithTherapies(int) (models.Patient, error)
+	GetPatientFull(int) (models.Patient, error)
 	GetAllPatients() ([]models.Patient, error)
 	AddPatient(models.Patient) (models.Patient, error)
+	UpdatePatient(models.Patient) (models.Patient, error)
 }
 
 type patientService struct {
@@ -25,7 +28,15 @@ func NewPatientService() *patientService {
 }
 
 func (db *patientService) GetPatient(id int) (patient models.Patient, err error) {
-	return patient, db.dbConnection.Preload("Patient").First(&patient, id).Error
+	return patient, db.dbConnection.First(&patient, id).Error
+}
+
+func (db *patientService) GetPatientFull(id int) (patient models.Patient, err error) {
+	return patient, db.dbConnection.Preload("DrugTreatments").Preload("Therapies").Preload("MedicalTherapies").First(&patient, id).Error
+}
+
+func (db *patientService) GetPatientWithTherapies(id int) (patient models.Patient, err error) {
+	return patient, db.dbConnection.Preload("Therapies").First(&patient, id).Error
 }
 
 func (db *patientService) GetAllPatients() (patient []models.Patient, err error) {
@@ -41,12 +52,12 @@ func (db *patientService) AddPatient(patient models.Patient) (models.Patient, er
 	return patient, db.dbConnection.Create(&patient).Error
 }
 
-// func (db *findStorageRepository) UpdateProduct(product model.Products) (model.Products, error) {
-// 	if err := db.connection.Preload("User").First(&product, product.ID).Error; err != nil {
-// 		return product, err
-// 	}
-// 	return product, db.connection.Preload("User").Model(&product).Updates(&product).Error
-// }
+func (db *patientService) UpdatePatient(patient models.Patient) (models.Patient, error) {
+	if err := db.dbConnection.First(&patient, patient.ID).Error; err != nil {
+		return patient, err
+	}
+	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
+}
 
 // func (db *findStorageRepository) DeleteProduct(product model.Products) (model.Products, error) {
 // 	if err := db.connection.Preload("User").First(&product, product.ID).Error; err != nil {

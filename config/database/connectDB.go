@@ -22,7 +22,7 @@ func ConnectDB() *gorm.DB {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
 	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
-	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{})
+	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{}, &models.MedicalTherapy{}, &models.DrugTreatment{}, &models.Company{}, &models.Relation{})
 
 	// psqlconn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
 	// dsn := "unix://user:pass@dbname/var/run/postgresql/.s.PGSQL.5432"

@@ -18,12 +18,20 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			response.Status = "error"
+			response.Message = "Authorization Required"
+			response.Response = ""
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			response.Status = "error"
+			response.Message = "Bearer Token Required"
+			response.Response = ""
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
