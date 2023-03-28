@@ -1,17 +1,14 @@
 package models
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
 type Relation struct {
 	gorm.Model
-	AccountID int
-	CompanyID int
+	AccountID uint
+	Account   Account
+	Companies []Company `gorm:"many2many:relation_companies;"`
 	Title     string
 	Type      string
-	CreatedOn time.Time
-	LastLogin time.Time
 }

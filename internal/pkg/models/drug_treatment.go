@@ -9,8 +9,9 @@ import (
 type DrugTreatment struct {
 	gorm.Model
 
-	PatientID string
-	DrugID    string `json:"drug_id" validate:"required"`
+	PatientID uint
+	DrugID    uint
+	Drug      Drug
 	UserID    string `json:"user_id" validate:"required"`
 	FromDate  string `json:"from_date" `
 	ToDate    string `json:"to_date" `

@@ -16,9 +16,9 @@ type Account struct {
 	Address   string
 	Amka      string `json:"amka"`
 	Age       string `json:"age"`
-	Job       string
-	// CompanyID int
-	// Company   Company `gorm:"foreignkey:CompanyID"`
+	Job       string `gorm:"default:null"`
+	// CompanyID int     `json:",omitempty"`
+	// Companies []Company `json:"companies,omitempty"`
 	Relations []Relation
 	CreatedOn time.Time
 	LastLogin time.Time `json:"lastlogin"`

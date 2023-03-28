@@ -190,7 +190,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 		_, _ = s.repository.UpdateAccount(retrievedAccount)
 		// _, err = s.dbConnection.NewUpdate().Model(&retrievedAccount).Column("last_login").Where("username = ?", account.Username).Exec(ctx)
 
-		token, expTime, hasError := handlers.GenerateJWT(account.Username)
+		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID)
 		if hasError != nil {
 			http.Error(w, hasError.Error(), http.StatusBadRequest)
 			return
@@ -231,6 +231,7 @@ func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
 
 	var response models.Response
 	var retrievedAccount models.Account
+	var company models.Company
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
@@ -262,6 +263,11 @@ func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println(intID)
+
+	company = s.repository.GetCompanyByAccountID(intID)
+	fmt.Println(company)
 
 	jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
 	if err != nil {

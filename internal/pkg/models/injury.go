@@ -1,19 +1,13 @@
 package models
 
-import (
-	"time"
-
-	"github.com/uptrace/bun"
-)
+import "gorm.io/gorm"
 
 type Injury struct {
-	bun.BaseModel `bun:"table:injuries,alias:inj"`
+	gorm.Model
 
-	InjuryID          string `bun:"injury_id,pk,autoincrement"`
-	UserID            string `bun:"user_id,notnull" json:"user_id" validate:"required"`
-	InjuryTitle       string `bun:"injury_title,notnull" json:"injury_title" validate:"required"`
-	InjuryDescription string `bun:"injury_description" json:"injury_description" `
-	BpositionID       string `bun:"bposition_id" json:"bposition_id" `
-	InjuryDate        string `bun:"injury_date" json:"injury_date" `
-	CreatedOn         time.Time
+	PatientID         uint
+	InjuryTitle       string `json:"injury_title"`
+	InjuryDescription string `json:"injury_description"`
+	BpositionID       string `json:"bposition_id"`
+	InjuryDate        string `json:"injury_date"`
 }

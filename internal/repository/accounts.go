@@ -13,6 +13,7 @@ type AccountsRepository interface {
 	GetAccountByUsername(string) (models.Account, error)
 	UpdateAccount(models.Account) (models.Account, error)
 	AddUser(models.Account) (models.Account, error)
+	GetCompanyByAccountID(int) models.Company
 }
 
 type accountService struct {
@@ -28,6 +29,11 @@ func NewAccountService() *accountService {
 
 func (db *accountService) GetAccountByID(id int) (account models.Account, err error) {
 	return account, db.dbConnection.Omit("password").First(&account, id).Error
+}
+
+func (db *accountService) GetCompanyByAccountID(id int) (company models.Company) {
+	db.dbConnection.Raw("select * from companies where id = (select company_id as id from relation_companies rc where rc.relation_id = (select id as id from relations r where r.account_id = ?))", id).Scan(&company)
+	return company
 }
 
 func (db *accountService) GetCompanyByAccountByID(id int) (account models.Account, err error) {

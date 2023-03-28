@@ -32,15 +32,15 @@ func (db *patientService) GetPatient(id int) (patient models.Patient, err error)
 }
 
 func (db *patientService) GetPatientFull(id int) (patient models.Patient, err error) {
-	return patient, db.dbConnection.Preload("DrugTreatments").Preload("Therapies").Preload("MedicalTherapies").First(&patient, id).Error
+	return patient, db.dbConnection.Preload("PersnoalAllergies").Preload("DrugTreatments").Preload("Therapies").Preload("MedicalTherapies").First(&patient, id).Error
 }
 
 func (db *patientService) GetPatientWithTherapies(id int) (patient models.Patient, err error) {
 	return patient, db.dbConnection.Preload("Therapies").First(&patient, id).Error
 }
 
-func (db *patientService) GetAllPatients() (patient []models.Patient, err error) {
-	return patient, db.dbConnection.Find(&patient).Error
+func (db *patientService) GetAllPatients() (patients []models.Patient, err error) {
+	return patients, db.dbConnection.Find(&patients).Error
 }
 
 // func (db *findStorageRepository) GetCurrentusersProducts(id int) (products []model.Products, err error) {
@@ -53,8 +53,9 @@ func (db *patientService) AddPatient(patient models.Patient) (models.Patient, er
 }
 
 func (db *patientService) UpdatePatient(patient models.Patient) (models.Patient, error) {
-	if err := db.dbConnection.First(&patient, patient.ID).Error; err != nil {
-		return patient, err
+	var oldPatient models.Patient
+	if err := db.dbConnection.First(&oldPatient, patient.ID).Error; err != nil {
+		return oldPatient, err
 	}
 	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
 }

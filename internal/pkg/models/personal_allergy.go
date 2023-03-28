@@ -1,17 +1,12 @@
 package models
 
-import (
-	"time"
-
-	"github.com/uptrace/bun"
-)
+import "gorm.io/gorm"
 
 type PersonalAllergy struct {
-	bun.BaseModel `bun:"table:personal_allergies,alias:persall"`
+	gorm.Model
 
-	PersonalAllergyID string `bun:"personal_allergies_id,pk,autoincrement"`
-	AllergyID         string `bun:"allergy_id,notnull" json:"allergy_id" validate:"required"`
-	UserID            string `bun:"user_id,notnull" json:"user_id" validate:"required"`
-	DiagnosedTime     string `bun:"diagnosed_time" json:"diagnosed_time" `
-	CreatedOn         time.Time
+	PatientID     uint
+	AllergyID     uint `json:"allergy_id"`
+	Allergy       Allergy
+	DiagnosedTime string `json:"diagnosed_time" `
 }

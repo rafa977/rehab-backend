@@ -5,6 +5,7 @@ import (
 
 	"github.com/rehab-backend/api/accounts"
 	"github.com/rehab-backend/api/companies"
+	"github.com/rehab-backend/api/general"
 	"github.com/rehab-backend/api/patients"
 	"github.com/rehab-backend/internal/pkg/handlers"
 )
@@ -32,6 +33,9 @@ func main() {
 
 	accountService := accounts.NewService()
 	accountService.RegisterHandlers(router)
+
+	generalService := general.NewService()
+	generalService.RegisterHandlers(router)
 
 	handlers.ListenRoute(router)
 }

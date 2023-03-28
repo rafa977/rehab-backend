@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -13,7 +11,5 @@ type Company struct {
 	City       string     `json:"city"`
 	PostalCode string     `json:"postalcode"`
 	TAXID      string     `json:"taxid"`
-	Relations  []Relation `json:",omitempty"`
-	CreatedOn  time.Time
-	LastLogin  time.Time `json:"lastlogin"`
+	Relations  []Relation `gorm:"many2many:relation_companies;"`
 }
