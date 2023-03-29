@@ -17,19 +17,17 @@ import (
 
 type service struct {
 	generalRepository repository.GeneralRepository
+	response          models.Response
 }
 
 func NewService() *service {
-
 	return &service{
 		generalRepository: repository.NewGeneralRepoService(),
 	}
 }
 
 func (s *service) RegisterHandlers(route *mux.Router) {
-
 	s.Handle(route)
-
 }
 
 func (s *service) Handle(route *mux.Router) {
@@ -47,22 +45,26 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/getAllergy", middleware.AuthenticationMiddleware(s.getAllergy))
 	sub.HandleFunc("/deleteAllergy", middleware.AuthenticationMiddleware(s.deleteAllergy))
 	sub.HandleFunc("/getAllAllergies", middleware.AuthenticationMiddleware(s.getAllAllergies))
+
+	sub.HandleFunc("/addDisorder", middleware.AuthenticationMiddleware(s.addDisorder))
+	sub.HandleFunc("/updateDisorder", middleware.AuthenticationMiddleware(s.updateDisorder))
+	sub.HandleFunc("/getDisorder", middleware.AuthenticationMiddleware(s.getDisorder))
+	sub.HandleFunc("/deleteDisorder", middleware.AuthenticationMiddleware(s.deleteDisorder))
+	sub.HandleFunc("/getAllDisorders", middleware.AuthenticationMiddleware(s.getAllDisorders))
 }
 
 func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 	var drugs []models.Drug
-	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	drugs, err := s.generalRepository.GetAllDrugs()
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Something went wrong"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Something went wrong"
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -72,25 +74,22 @@ func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	s.response.Status = "success"
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
 }
 
 func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 	var drug models.Drug
-	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
+		s.response.Status = "error"
+		s.response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(s.response)
 
 		return
 	}
@@ -98,11 +97,11 @@ func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 
 	drug, err = s.generalRepository.GetDrug(intID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Record not found"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Record not found"
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -112,18 +111,14 @@ func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
+	s.response.Status = "success"
+	s.response.Message = ""
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
 
 }
 
 func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	var response models.Response
 	var drug models.Drug
 
 	err := json.NewDecoder(r.Body).Decode(&drug)
@@ -133,33 +128,28 @@ func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	_, err = s.generalRepository.DeleteDrug(drug.ID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Unknown Username or Password"
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
-	response.Status = "success"
-	response.Message = "Deleted"
-	response.Response = ""
-	json.NewEncoder(w).Encode(response)
+	s.response.Status = "success"
+	s.response.Message = "Deleted"
+	s.response.Response = ""
+	json.NewEncoder(w).Encode(s.response)
 
 }
 
 func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var drug models.Drug
-	var response models.Response
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
+
 	err := json.NewDecoder(r.Body).Decode(&drug)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -182,11 +172,11 @@ func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = newerr
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -238,18 +228,17 @@ func (s *service) addDrug(w http.ResponseWriter, r *http.Request) {
 
 func (s *service) getAllAllergies(w http.ResponseWriter, r *http.Request) {
 	var allergies []models.Allergy
-	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	allergies, err := s.generalRepository.GetAllAllergies()
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Something went wrong"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Something went wrong"
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -259,25 +248,24 @@ func (s *service) getAllAllergies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
+	s.response.Status = "success"
+	s.response.Message = ""
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
 
 }
 
 func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 	var allergy models.Allergy
-	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
+		s.response.Status = "error"
+		s.response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(s.response)
 
 		return
 	}
@@ -285,11 +273,11 @@ func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 
 	allergy, err = s.generalRepository.GetAllergy(intID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Record not found"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Record not found"
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -299,18 +287,14 @@ func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
+	s.response.Status = "success"
+	s.response.Message = ""
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
 
 }
 
 func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	var response models.Response
 	var allergy models.Allergy
 
 	err := json.NewDecoder(r.Body).Decode(&allergy)
@@ -320,33 +304,28 @@ func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	s.response.Date = currentDate
 
 	_, err = s.generalRepository.DeleteAllergy(allergy.ID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Something went wrong"
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = "Something went wrong"
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
-	response.Status = "success"
-	response.Message = "Deleted"
-	response.Response = ""
-	json.NewEncoder(w).Encode(response)
+	s.response.Status = "success"
+	s.response.Message = "Deleted"
+	s.response.Response = ""
+	json.NewEncoder(w).Encode(s.response)
 
 }
 
 func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var allergy models.Allergy
-	var response models.Response
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
+
 	err := json.NewDecoder(r.Body).Decode(&allergy)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -368,11 +347,11 @@ func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = newerr
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
@@ -380,13 +359,8 @@ func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var allergy models.Allergy
-	var response models.Response
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
+
 	err := json.NewDecoder(r.Body).Decode(&allergy)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -409,13 +383,180 @@ func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
+		s.response.Status = "error"
+		s.response.Message = newerr
+		s.response.Response = ""
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(s.response)
 		return
 	}
 
 	fmt.Fprintf(w, "Registration of Allergy - Successful")
+}
+
+////////////////////// ############## DISORDERS ################# /////////////////
+func (s *service) getAllDisorders(w http.ResponseWriter, r *http.Request) {
+	var disorders []models.Disorder
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	disorders, err := s.generalRepository.GetAllDisorders()
+	if err != nil {
+		s.response.Status = "error"
+		s.response.Message = "Something went wrong"
+		s.response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s.response)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(disorders)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	s.response.Status = "success"
+	s.response.Message = ""
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
+
+}
+
+func (s *service) getDisorder(w http.ResponseWriter, r *http.Request) {
+	var disorder models.Disorder
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		s.response.Status = "error"
+		s.response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(s.response)
+
+		return
+	}
+	intID, err := strconv.Atoi(id)
+
+	disorder, err = s.generalRepository.GetDisorder(intID)
+	if err != nil {
+		s.response.Status = "error"
+		s.response.Message = "Record not found"
+		s.response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s.response)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(disorder)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	s.response.Status = "success"
+	s.response.Message = ""
+	s.response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(s.response)
+}
+
+func (s *service) deleteDisorder(w http.ResponseWriter, r *http.Request) {
+	var disorder models.Disorder
+
+	err := json.NewDecoder(r.Body).Decode(&disorder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	_, err = s.generalRepository.DeleteDisorder(disorder.ID)
+	if err != nil {
+		s.response.Status = "error"
+		s.response.Message = "Something went wrong"
+		s.response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s.response)
+		return
+	}
+
+	s.response.Status = "success"
+	s.response.Message = "Deleted"
+	s.response.Response = ""
+	json.NewEncoder(w).Encode(s.response)
+}
+
+func (s *service) updateDisorder(w http.ResponseWriter, r *http.Request) {
+	var disorder models.Disorder
+
+	err := json.NewDecoder(r.Body).Decode(&disorder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(disorder)
+	if !isValid {
+		for _, fieldError := range errors {
+			http.Error(w, fieldError, http.StatusBadRequest)
+			return
+		}
+	}
+	disorder, err = s.generalRepository.UpdateDisorder(disorder)
+	if err != nil {
+		var newerr string
+		if strings.Contains(err.Error(), "record not found") {
+			newerr = "Record not Found!"
+		} else {
+			newerr = "Bad Request"
+		}
+		s.response.Status = "error"
+		s.response.Message = newerr
+		s.response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s.response)
+		return
+	}
+
+	fmt.Fprintf(w, "Disorder Udated - Successful")
+}
+
+func (s *service) addDisorder(w http.ResponseWriter, r *http.Request) {
+	var disorder models.Disorder
+
+	err := json.NewDecoder(r.Body).Decode(&disorder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(disorder)
+	if !isValid {
+		for _, fieldError := range errors {
+			http.Error(w, fieldError, http.StatusBadRequest)
+			return
+		}
+	}
+
+	disorder, err = s.generalRepository.AddDisorder(disorder)
+	if err != nil {
+		var newerr string
+		if strings.Contains(err.Error(), "users_company_email_key") {
+			newerr = "Allergy already registered!"
+		} else {
+			newerr = "Bad Request"
+		}
+		s.response.Status = "error"
+		s.response.Message = newerr
+		s.response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s.response)
+		return
+	}
+
+	fmt.Fprintf(w, "Registration of Disorder - Successful")
 }

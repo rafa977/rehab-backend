@@ -1,0 +1,71 @@
+condition - kartela (table)
+1. title
+2. patient id
+3. date
+
+doctor notes (table)
+1. condition id
+2. doctor name
+3. note
+4. date
+5. has exams
+
+examination files (table) 
+1. condition id
+2. patient id
+3. file title
+4. file url
+5. date
+
+history of condition (table)
+1. condition id
+2. description
+3. date
+4. frequency
+5. note
+
+
+test titles (table)
+1. title
+2. company id
+
+tests (table)
+1. title
+2. body position
+3. body part
+4. points
+5. comment
+6. type of test
+7. date
+8. patient id
+
+
+test types to be stored
+scapula  
+muscle spasm 
+strength 
+Hips
+Core
+ROM
+Active Rom
+Beighton Test
+Motor Control
+Propioception
+Elbow
+
+
+stretching (table)
+
+muscle atrophy (table)
+ 
+examinations (table)
+
+physiotherapies (table)
+
+1. patient id
+2. physio id 
+3. 
+
+
+
+

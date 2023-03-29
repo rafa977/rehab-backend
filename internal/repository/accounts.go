@@ -14,6 +14,7 @@ type AccountsRepository interface {
 	UpdateAccount(models.Account) (models.Account, error)
 	AddUser(models.Account) (models.Account, error)
 	GetCompanyByAccountID(int) models.Company
+	GetCompaniesByAccountID(uint) []uint
 }
 
 type accountService struct {
@@ -34,6 +35,11 @@ func (db *accountService) GetAccountByID(id int) (account models.Account, err er
 func (db *accountService) GetCompanyByAccountID(id int) (company models.Company) {
 	db.dbConnection.Raw("select * from companies where id = (select company_id as id from relation_companies rc where rc.relation_id = (select id as id from relations r where r.account_id = ?))", id).Scan(&company)
 	return company
+}
+
+func (db *accountService) GetCompaniesByAccountID(id uint) (ids []uint) {
+	db.dbConnection.Raw("select id from companies where id = (select company_id as id from relation_companies rc where rc.relation_id = (select id as id from relations r where r.account_id = ?))", id).Scan(&ids)
+	return ids
 }
 
 func (db *accountService) GetCompanyByAccountByID(id int) (account models.Account, err error) {

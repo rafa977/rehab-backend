@@ -25,6 +25,9 @@ func main() {
 	patientService := patients.NewService()
 	patientService.RegisterHandlers(router)
 
+	patientDetailsService := patients.NewDetailsService()
+	patientDetailsService.RegisterDetailHandlers(router)
+
 	therapyService := patients.NewTherapyService()
 	therapyService.RegisterHandlers(router)
 

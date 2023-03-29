@@ -43,6 +43,7 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/updateAccount", middleware.AuthenticationMiddleware(s.updateAccount))
 	sub.HandleFunc("/login", s.login)
 	sub.HandleFunc("/getAccountById", middleware.AuthenticationMiddleware(s.getAccountById))
+	sub.HandleFunc("/getCompaniesByAccountId", middleware.AuthenticationMiddleware(s.getCompaniesByAccountId))
 	sub.HandleFunc("/deleteAccountById", deleteAccountById)
 }
 
@@ -139,9 +140,6 @@ func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 
 	var account models.Account
@@ -149,8 +147,6 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 	var response models.Response
 	response.Date = currentDate
 
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&account)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -190,7 +186,9 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 		_, _ = s.repository.UpdateAccount(retrievedAccount)
 		// _, err = s.dbConnection.NewUpdate().Model(&retrievedAccount).Column("last_login").Where("username = ?", account.Username).Exec(ctx)
 
-		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID)
+		retrievedCompanies := s.repository.GetCompaniesByAccountID(retrievedAccount.ID)
+
+		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID, retrievedCompanies)
 		if hasError != nil {
 			http.Error(w, hasError.Error(), http.StatusBadRequest)
 			return
@@ -223,6 +221,30 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+}
+
+func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request) {
+	var response models.Response
+	var retrievedCompanies []uint
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
+
+	id := gcontext.Get(r, "id").(uint)
+
+	retrievedCompanies = s.repository.GetCompaniesByAccountID(id)
+
+	jsonRetrievedAccount, err := json.Marshal(retrievedCompanies)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	response.Status = "success"
+	response.Message = ""
+	response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
 
 }
 

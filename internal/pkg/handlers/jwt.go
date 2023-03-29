@@ -9,21 +9,23 @@ import (
 )
 
 type Claims struct {
-	Username   string `json:"username"`
-	ID         uint   `json:"id"`
-	Authorized string `json:"authorized"`
+	Username   string
+	ID         uint
+	CompIDs    []uint
+	Authorized string
 	jwt.RegisteredClaims
 }
 
 var sampleSecretKey = []byte("SecretYouShouldHide")
 
-func GenerateJWT(username string, id uint) (string, time.Time, error) {
+func GenerateJWT(username string, id uint, compIDs []uint) (string, time.Time, error) {
 
 	expTime := time.Now().Add(time.Minute * 60)
 
 	claims := &Claims{
 		Username:   username,
 		ID:         id,
+		CompIDs:    compIDs,
 		Authorized: "authorized",
 		RegisteredClaims: jwt.RegisteredClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
@@ -36,7 +38,6 @@ func GenerateJWT(username string, id uint) (string, time.Time, error) {
 
 	tokenString, err := token.SignedString(sampleSecretKey)
 	if err != nil {
-		fmt.Println("here is the error")
 		return "", expTime, err
 	}
 
@@ -44,7 +45,7 @@ func GenerateJWT(username string, id uint) (string, time.Time, error) {
 
 }
 
-func ValidateToken(reqToken string) (string, uint, error) {
+func ValidateToken(reqToken string) (string, uint, []uint, error) {
 
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
@@ -59,19 +60,19 @@ func ValidateToken(reqToken string) (string, uint, error) {
 
 	username := claims.Username
 	id := claims.ID
-	fmt.Println(username)
+	compIDs := claims.CompIDs
 
 	fmt.Println(err)
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			return "", 0, errors.New("Invalid Signature")
+			return "", 0, nil, errors.New("Invalid Signature")
 		}
-		return "", 0, errors.New("Bad Request")
+		return "", 0, nil, errors.New("Bad Request")
 	}
 	if !tkn.Valid {
-		return "", 0, errors.New("Token is invalid")
+		return "", 0, nil, errors.New("Token is invalid")
 	}
 
-	return username, id, nil
+	return username, id, compIDs, nil
 }

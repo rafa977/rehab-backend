@@ -46,7 +46,7 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/registerCompany", middleware.AuthenticationMiddleware(s.companyRegistration))
 	sub.HandleFunc("/addRelation", middleware.AuthenticationMiddleware(s.addRelation))
 	sub.HandleFunc("/getRelation", middleware.AuthenticationMiddleware(s.getRelation))
-	// sub.HandleFunc("/getRelationByCompany", middleware.AuthenticationMiddleware(s.getRelationByCompany))
+	sub.HandleFunc("/getRelationIDsByAccountID", middleware.AuthenticationMiddleware(s.getRelationIDsByAccountID))
 
 	sub.HandleFunc("/updateCompany", middleware.AuthenticationMiddleware(s.upateCompany))
 	sub.HandleFunc("/getCompany", middleware.AuthenticationMiddleware(s.getCompanyData))
@@ -193,36 +193,44 @@ func (s *service) getCompanyData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// func (s *service) getRelationByCompany(w http.ResponseWriter, r *http.Request) {
-// 	var relation []models.Relation
-// 	var response models.Response
+func (s *service) getRelationIDsByAccountID(w http.ResponseWriter, r *http.Request) {
+	var relationIDs []models.Relation
+	var response models.Response
 
-// 	id := 2
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		response.Status = "error"
+		response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(response)
 
-// 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-// 	response.Date = currentDate
+		return
+	}
+	intID, err := strconv.Atoi(id)
 
-// 	relation, err := s.repository.GetRelationsByCompanyID(id)
-// 	if err != nil {
-// 		response.Status = "error"
-// 		response.Message = "Unknown Username or Password"
-// 		response.Response = ""
-// 		w.WriteHeader(http.StatusOK)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
 
-// 	jsonRetrievedAccount, err := json.Marshal(relation)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	relationIDs, err = s.repository.GetRelationIDsByAccountID(intID)
+	if err != nil {
+		response.Status = "error"
+		response.Message = "Unknown Username or Password"
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	fmt.Println(relationIDs)
+	jsonRetrievedAccount, err := json.Marshal(relationIDs)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	response.Status = "success"
-// 	response.Message = ""
-// 	response.Response = string(jsonRetrievedAccount)
-// 	json.NewEncoder(w).Encode(response)
-// }
+	response.Status = "success"
+	response.Message = ""
+	response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
+}
 
 func (s *service) getRelation(w http.ResponseWriter, r *http.Request) {
 	var relation []models.Relation

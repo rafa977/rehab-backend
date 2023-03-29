@@ -23,6 +23,13 @@ type GeneralRepository interface {
 	DeleteAllergy(uint) (bool, error)
 	AddAllergy(models.Allergy) (models.Allergy, error)
 	UpdateAllergy(models.Allergy) (models.Allergy, error)
+
+	// Disorder
+	GetDisorder(int) (models.Disorder, error)
+	GetAllDisorders() ([]models.Disorder, error)
+	DeleteDisorder(uint) (bool, error)
+	AddDisorder(models.Disorder) (models.Disorder, error)
+	UpdateDisorder(models.Disorder) (models.Disorder, error)
 }
 
 type generalService struct {
@@ -94,3 +101,32 @@ func (db *generalService) DeleteAllergy(id uint) (bool, error) {
 }
 
 // ############# Allergy CRUD END ############################# //
+
+// ############# Disorder CRUD ############################# //
+func (db *generalService) GetDisorder(id int) (disorder models.Disorder, err error) {
+	return disorder, db.dbConnection.First(&disorder, id).Error
+}
+
+func (db *generalService) GetAllDisorders() (allergies []models.Disorder, err error) {
+	return allergies, db.dbConnection.Find(&allergies).Error
+}
+
+func (db *generalService) AddDisorder(disorder models.Disorder) (models.Disorder, error) {
+	return disorder, db.dbConnection.Create(&disorder).Error
+}
+
+func (db *generalService) UpdateDisorder(disorder models.Disorder) (models.Disorder, error) {
+
+	var oldDisorder models.Disorder
+
+	if err := db.dbConnection.First(&oldDisorder, disorder.ID).Error; err != nil {
+		return oldDisorder, err
+	}
+	return disorder, db.dbConnection.Model(&disorder).Updates(&disorder).Error
+}
+
+func (db *generalService) DeleteDisorder(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.Disorder{}, id).Error
+}
+
+// ############# Disorder CRUD END ############################# //

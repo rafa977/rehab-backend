@@ -23,7 +23,7 @@ func ConnectDB() *gorm.DB {
 	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{}, &models.MedicalTherapy{}, &models.DrugTreatment{}, &models.Company{}, &models.Relation{},
-		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{})
+		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{}, &models.PersonalDisorder{}, &models.Disorder{}, &models.Visit{}, &models.Injury{})
 
 	// psqlconn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
 	// dsn := "unix://user:pass@dbname/var/run/postgresql/.s.PGSQL.5432"

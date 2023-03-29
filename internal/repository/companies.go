@@ -13,7 +13,7 @@ type CompanyRepository interface {
 	RegisterCompany(models.Company) (models.Company, error)
 	AddRelation(models.Relation) (models.Relation, error)
 	GetRelationsByAccountID(uint) ([]models.Relation, error)
-	// GetRelationsByCompanyID(int) ([]models.Relation, error)
+	GetRelationIDsByAccountID(int) ([]models.Relation, error)
 }
 
 type companyService struct {
@@ -53,6 +53,11 @@ func (db *companyService) AddRelation(relation models.Relation) (models.Relation
 
 func (db *companyService) GetRelationsByAccountID(id uint) (relation []models.Relation, err error) {
 	return relation, db.dbConnection.Where("account_id = ?", id).Preload("Companies").Find(&relation).Error
+}
+
+func (db *companyService) GetRelationIDsByAccountID(id int) (relation []models.Relation, err error) {
+	// var relat models.Relation
+	return relation, db.dbConnection.Select("id").Where("account_id = ?", id).Preload("Companies").Find(&relation).Error
 }
 
 // func (db *companyService) GetRelationsByCompanyID(id int) (relation []models.Relation, err error) {

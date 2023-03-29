@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type Injury struct {
 	gorm.Model
 
-	PatientID         uint
+	PatientDetailsID  uint
 	InjuryTitle       string `json:"injury_title"`
 	InjuryDescription string `json:"injury_description"`
 	BpositionID       string `json:"bposition_id"`

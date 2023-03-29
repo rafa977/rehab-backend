@@ -9,11 +9,11 @@ import (
 type MedicalTherapy struct {
 	gorm.Model
 
-	PatientID                 string
-	MedicalTherapyTitle       string `json:"medical_therapy_title" validate:"required"`
-	MedicalTherapyDescription string `json:"medical_therapy_description" `
-	FromDate                  string `json:"from_date" `
-	ToDate                    string `json:"to_date" `
+	PatientDetailsID          uint
+	MedicalTherapyTitle       string `json:"medicalTherapyTitle" validate:"required"`
+	MedicalTherapyDescription string `json:"medicalTherapyDescription" `
+	FromDate                  string `json:"fromDate" `
+	ToDate                    string `json:"toDate" `
 	Quantity                  string `json:"quantity" `
 	Frequency                 string `json:"frequency" `
 	CreatedOn                 time.Time
