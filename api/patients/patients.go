@@ -40,6 +40,7 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/registerPatient", middleware.AuthenticationMiddleware(s.patientRegistration))
 	sub.HandleFunc("/updatePatient", middleware.AuthenticationMiddleware(s.updatePatient))
 	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData))
+	sub.HandleFunc("/searchPatient", middleware.AuthenticationMiddleware(s.getPatientDataKeyword))
 	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
 }
 
@@ -61,6 +62,59 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
+
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	response.Status = "success"
+	response.Message = username
+	response.Response = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
+
+}
+
+func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) {
+	var patients []models.Patient
+	var response models.Response
+	var err error
+
+	username := gcontext.Get(r, "username").(string)
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
+
+	keyword := r.URL.Query().Get("keyword")
+	if keyword == "" {
+		response.Status = "error"
+		response.Message = "Please input all required fields."
+		json.NewEncoder(w).Encode(response)
+
+		return
+	}
+
+	numberKeyword := keyword
+	if numberKeyword, errConvert := strconv.Atoi(numberKeyword); errConvert == nil {
+		patients, err = s.patientRepository.GetPatientAmka(numberKeyword)
+	} else {
+		keyword = "%" + keyword + "%"
+		patients, err = s.patientRepository.GetPatientKeyword(keyword)
+	}
+	if err != nil {
+		response.Status = "error"
+		response.Message = err.Error()
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// if account.Username != username {
+	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
+	// 	return
+	// }
 
 	jsonRetrievedAccount, err := json.Marshal(patients)
 	if err != nil {
@@ -126,13 +180,9 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var patient models.Patient
 	var response models.Response
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
+
 	err := json.NewDecoder(r.Body).Decode(&patient)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -189,7 +239,7 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 	patient, err = s.patientRepository.AddPatient(patient)
 	if err != nil {
 		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
+		if strings.Contains(err.Error(), "idx_patients_amka") {
 			newerr = "user already exists!"
 		} else {
 			newerr = "Bad Request"
@@ -202,5 +252,9 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Registration of Account - Successful")
+	response.Status = "success"
+	response.Message = "Registration of Account - Successful"
+	response.Response = ""
+	json.NewEncoder(w).Encode(response)
+	return
 }

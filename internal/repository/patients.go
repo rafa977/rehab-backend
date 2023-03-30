@@ -9,6 +9,8 @@ import (
 //NewPatientRepository --> Interface to PatientRepository
 type PatientRepository interface {
 	GetPatient(int) (models.Patient, error)
+	GetPatientKeyword(string) ([]models.Patient, error)
+	GetPatientAmka(int) ([]models.Patient, error)
 	GetAllPatients() ([]models.Patient, error)
 	AddPatient(models.Patient) (models.Patient, error)
 	UpdatePatient(models.Patient) (models.Patient, error)
@@ -27,6 +29,14 @@ func NewPatientService() *patientService {
 
 func (db *patientService) GetPatient(id int) (patient models.Patient, err error) {
 	return patient, db.dbConnection.First(&patient, id).Error
+}
+
+func (db *patientService) GetPatientKeyword(keyword string) (patients []models.Patient, err error) {
+	return patients, db.dbConnection.Where("firstname LIKE ?", keyword).Or("lastname LIKE ? ", keyword).Find(&patients).Error
+}
+
+func (db *patientService) GetPatientAmka(amka int) (patients []models.Patient, err error) {
+	return patients, db.dbConnection.Where("amka = ?", amka).Find(&patients).Error
 }
 
 func (db *patientService) GetAllPatients() (patients []models.Patient, err error) {
