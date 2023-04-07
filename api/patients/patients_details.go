@@ -45,18 +45,25 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
 	var patient models.PatientDetails
 	var response models.Response
+	isOwner := false
 
 	err := json.NewDecoder(r.Body).Decode(&patient)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	// TODO: check company ID if exists and if caller is related
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
 	userID := gcontext.Get(r, "id").(uint)
 
-	isOwner := false
+	if len(compIDs) == 0 {
+		response.Status = "error"
+		response.Message = "Please register your company"
+		response.Response = ""
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
 	for _, v := range compIDs {
 		if v == patient.CompanyID {
