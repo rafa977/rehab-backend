@@ -10,6 +10,7 @@ import (
 type PatientDetailRepository interface {
 	GetPatientDetails(int) (models.PatientDetails, error)
 	GetPatientDetailsFull(int) (models.PatientDetails, error)
+	GetPatientDetailsByIdAndCompanyID(int, int) models.PatientDetails
 	AddPatientDetails(models.PatientDetails) (models.PatientDetails, error)
 	UpdatePatientDetails(models.PatientDetails) (models.PatientDetails, error)
 
@@ -29,6 +30,11 @@ func NewPatientDetailsService() *patientService {
 
 func (db *patientService) GetPatientDetails(id int) (patient models.PatientDetails, err error) {
 	return patient, db.dbConnection.First(&patient, id).Error
+}
+
+func (db *patientService) GetPatientDetailsByIdAndCompanyID(patientDetailsId int, companyId int) (patient models.PatientDetails) {
+	db.dbConnection.Raw("select * from patient_details where id = ? and company_id = ?", patientDetailsId, companyId).Scan(&patient)
+	return patient
 }
 
 func (db *patientService) GetPatientDetailsByCompanyID(companyId int) (patientDetails []models.PatientDetails, err error) {

@@ -54,6 +54,7 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 
 	// TODO: check company ID if exists and if caller is related
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	userID := gcontext.Get(r, "id").(uint)
 
 	isOwner := false
 
@@ -78,6 +79,8 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 	// 		return
 	// 	}
 	// }
+
+	patient.CreatedBy = userID
 
 	patient, err = s.patientDetailsRepository.AddPatientDetails(patient)
 	if err != nil {

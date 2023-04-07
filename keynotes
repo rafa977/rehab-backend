@@ -64,7 +64,12 @@ physiotherapies (table)
 
 1. patient id
 2. physio id 
-3. 
+
+
+visits (table) 
+1. patient id
+2. company id 
+3. date
 
 
 

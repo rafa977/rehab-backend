@@ -1,0 +1,59 @@
+Dysfunction Table
+Patient ID
+Dysfunction
+Description
+Note
+Date
+How many visits needed
+Frequency of visits
+Time per visit needed
+Connected with Injury
+
+Protocol per Dysfunction
+ID
+Dysfunction ID
+Timetable
+Expectation
+Result
+
+Therapy Table
+Patient ID
+Dysfunction ID
+Date
+Employer ID
+Supervisor ID
+Therapy Key IDs []
+Therapy Notes []
+
+Training Dates
+[] map of days per week 
+
+map[] time | day
+
+Sessions per week 
+Physio
+
+Notes for Therapies Table
+ID
+Date
+Therapy ID
+Note
+
+Exercises For Patients Table
+ID
+Therapy ID
+Title
+Description
+Completed
+
+
+Therapy Kyes Table
+ID
+Title
+Note
+
+
+
+
+
+

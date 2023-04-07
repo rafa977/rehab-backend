@@ -7,6 +7,7 @@ import (
 	"github.com/rehab-backend/api/companies"
 	"github.com/rehab-backend/api/general"
 	"github.com/rehab-backend/api/patients"
+	"github.com/rehab-backend/api/ph_therapies"
 	"github.com/rehab-backend/internal/pkg/handlers"
 )
 
@@ -30,6 +31,9 @@ func main() {
 
 	therapyService := patients.NewTherapyService()
 	therapyService.RegisterHandlers(router)
+
+	phTherapyService := ph_therapies.NewPhTherapiesService()
+	phTherapyService.RegisterPhTherapiesHandlers(router)
 
 	companyService := companies.NewService()
 	companyService.RegisterHandlers(router)

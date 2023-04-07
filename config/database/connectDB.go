@@ -23,16 +23,8 @@ func ConnectDB() *gorm.DB {
 	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{}, &models.MedicalTherapy{}, &models.DrugTreatment{}, &models.Company{}, &models.Relation{},
-		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{}, &models.PersonalDisorder{}, &models.Disorder{}, &models.Visit{}, &models.Injury{})
-
-	// psqlconn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
-	// dsn := "unix://user:pass@dbname/var/run/postgresql/.s.PGSQL.5432"
-	// sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(psqlconn)))
-
-	// db := bun.NewDB(sqldb, pgdialect.New())
-
-	// errPing := db.Ping()
-	// fmt.Println(errPing)
+		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{}, &models.PersonalDisorder{}, &models.Disorder{}, &models.Visit{},
+		&models.Injury{}, &models.Dysfunction{}, &models.Protocol{}, &models.PhTherapy{}, &models.PhTherapyNote{}, &models.PhTherapyKey{}, &models.PatientExercise{})
 
 	return db
 }

@@ -19,4 +19,6 @@ type PatientDetails struct {
 	Injuries          []Injury           `json:"injuries,omitempty"`
 	PersonalAllergies []PersonalAllergy  `json:"personalAllergies,omitempty"`
 	PersonalDisorders []PersonalDisorder `json:"persnoalDisorders,omitempty"`
+	Dysfunctions      []Dysfunction      `json:"dysfunctions,omitempty"`
+	PhTherapies       []PhTherapy        `json:"phTherapies,omitempty"`
 }
