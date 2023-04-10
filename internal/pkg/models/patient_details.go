@@ -9,8 +9,6 @@ type PatientDetails struct {
 
 	PatientID         uint
 	Patient           Patient
-	CompanyID         uint    `gorm:"->:false;<-:create" json:"companyId,omitempty"` // createonly (disabled read from db)
-	Company           Company `json:"-"`
 	CreatedBy         uint
 	LastUpdatedBy     uint
 	Therapies         []Therapy          `json:"therapies,omitempty"`

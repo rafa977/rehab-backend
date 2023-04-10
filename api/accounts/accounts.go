@@ -73,8 +73,6 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	account.Password = hashedPassword
 	account.CreatedOn = time.Now()
 
-	var response models.Response
-
 	account, err = s.repository.AddUser(account)
 	if err != nil {
 		var newerr string
@@ -83,14 +81,9 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
-		return
+		handlers.ProduceErrorResponse(newerr, w, r)
 	}
-	fmt.Fprintf(w, "Registration of Account - Successful")
+	handlers.ProduceSuccessResponse("Registration of Account - Successful", w, r)
 }
 
 func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {

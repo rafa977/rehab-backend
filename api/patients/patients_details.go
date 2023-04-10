@@ -11,25 +11,26 @@ import (
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
+	"github.com/rehab-backend/internal/pkg/handlers"
 	"github.com/rehab-backend/internal/pkg/models"
 	"github.com/rehab-backend/internal/repository"
 )
 
 type detailsService struct {
 	patientDetailsRepository repository.PatientDetailRepository
+	patientRepository        repository.PatientRepository
 }
 
 func NewDetailsService() *detailsService {
 
 	return &detailsService{
 		patientDetailsRepository: repository.NewPatientDetailsService(),
+		patientRepository:        repository.NewPatientService(),
 	}
 }
 
 func (s *detailsService) RegisterDetailHandlers(route *mux.Router) {
-
 	s.DetailHandle(route)
-
 }
 
 func (s *detailsService) DetailHandle(route *mux.Router) {
@@ -43,11 +44,11 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 }
 
 func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
-	var patient models.PatientDetails
-	var response models.Response
-	isOwner := false
+	var patientDetails models.PatientDetails
+	var isOwner = false
+	var patient models.Patient
 
-	err := json.NewDecoder(r.Body).Decode(&patient)
+	err := json.NewDecoder(r.Body).Decode(&patientDetails)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -55,13 +56,14 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 	// TODO: check company ID if exists and if caller is related
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
 	userID := gcontext.Get(r, "id").(uint)
-
 	if len(compIDs) == 0 {
-		response.Status = "error"
-		response.Message = "Please register your company"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("Please register your company", w, r)
+		return
+	}
+
+	patient, err = s.patientRepository.GetPatient(int(patientDetails.PatientID))
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
@@ -70,26 +72,14 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 			isOwner = true
 		}
 	}
-
 	if !isOwner {
-		response.Status = "error"
-		response.Message = "You do not have permissions to add these data"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("You do not have permissions to add these data", w, r)
 		return
 	}
-	// isValid, errors := handlers.ValidateInputs(patient)
-	// if !isValid {
-	// 	for _, fieldError := range errors {
-	// 		http.Error(w, fieldError, http.StatusBadRequest)
-	// 		return
-	// 	}
-	// }
 
-	patient.CreatedBy = userID
+	patientDetails.CreatedBy = userID
 
-	patient, err = s.patientDetailsRepository.AddPatientDetails(patient)
+	patientDetails, err = s.patientDetailsRepository.AddPatientDetails(patientDetails)
 	if err != nil {
 		var newerr string
 		if strings.Contains(err.Error(), "users_company_email_key") {
@@ -97,33 +87,19 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "Registration of Details - Successful")
+	handlers.ProduceSuccessResponse("Registration of Details - Successful", w, r)
 }
 
 func (s *detailsService) getPatientsDetailsByCompanyID(w http.ResponseWriter, r *http.Request) {
 	var patients []models.PatientDetails
-	var response models.Response
-
-	username := gcontext.Get(r, "username").(string)
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
 
 	patients, err := s.patientDetailsRepository.GetPatientDetailsByCompanyID(1)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
@@ -133,28 +109,19 @@ func (s *detailsService) getPatientsDetailsByCompanyID(w http.ResponseWriter, r 
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Request) {
 	var patient models.PatientDetails
 	var response models.Response
 
-	username := gcontext.Get(r, "username").(string)
-
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
-
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 
@@ -162,18 +129,9 @@ func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Re
 
 	patient, err = s.patientDetailsRepository.GetPatientDetailsFull(intID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-
-	// if account.Username != username {
-	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-	// 	return
-	// }
 
 	jsonRetrievedAccount, err := json.Marshal(patient)
 	if err != nil {
@@ -181,11 +139,7 @@ func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 // func (s *detailsService) getPatientFull(w http.ResponseWriter, r *http.Request) {

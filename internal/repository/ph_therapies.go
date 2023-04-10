@@ -9,12 +9,13 @@ import (
 //TherapyRepository --> Interface to TherapyRepository
 type PhTherapyRepository interface {
 	AddDysfunction(models.Dysfunction) (models.Dysfunction, error)
-	GetDysfunction(uint) (models.Dysfunction, error)
+	GetDysfunction(int) (models.Dysfunction, error)
 	UpdateDysfunction(models.Dysfunction) (models.Dysfunction, error)
 	DeleteDysfunction(int) (bool, error)
 
 	AddPhTherapy(models.PhTherapy) (models.PhTherapy, error)
-	// GetPhTherapy(int) (models.Therapy, error)
+	GetPhTherapy(int) (models.PhTherapy, error)
+	GetPhTherapiesByCompanyID(int) ([]models.PhTherapy, error)
 	// DeletePhTherapy(int) (bool, error)
 	// UpdatePhTherapy(models.Therapy) (models.Therapy, error)
 }
@@ -35,7 +36,7 @@ func (db *phTherapyService) AddDysfunction(dysfnuction models.Dysfunction) (mode
 	return dysfnuction, db.dbConnection.Create(&dysfnuction).Error
 }
 
-func (db *phTherapyService) GetDysfunction(id uint) (dysfnuction models.Dysfunction, err error) {
+func (db *phTherapyService) GetDysfunction(id int) (dysfnuction models.Dysfunction, err error) {
 	return dysfnuction, db.dbConnection.First(&dysfnuction, id).Error
 }
 
@@ -57,9 +58,13 @@ func (db *phTherapyService) AddPhTherapy(phTherapy models.PhTherapy) (models.PhT
 	return phTherapy, db.dbConnection.Create(&phTherapy).Error
 }
 
-// func (db *phTherapyService) GetPhTherapy(id int) (therapy models.Therapy, err error) {
-// 	return therapy, db.dbConnection.Preload("Patient").First(&therapy, id).Error
-// }
+func (db *phTherapyService) GetPhTherapy(id int) (therapy models.PhTherapy, err error) {
+	return therapy, db.dbConnection.Preload("Patient").First(&therapy, id).Error
+}
+
+func (db *phTherapyService) GetPhTherapiesByCompanyID(companyId int) (therapies []models.PhTherapy, err error) {
+	return therapies, db.dbConnection.Where("company_id = ?", companyId).Find(&therapies).Error
+}
 
 // func (db *phTherapyService) UpdatePhTherapy(therapy models.Therapy) (models.Therapy, error) {
 // 	if err := db.dbConnection.Preload("User").First(&therapy, therapy.ID).Error; err != nil {

@@ -13,5 +13,7 @@ type Patient struct {
 	Amka           int `gorm:"unique"  json:"amka" validate:"required"`
 	Age            int `json:"age" validate:"required"`
 	Job            string
+	CompanyID      uint             `gorm:"->:false;<-:create" json:"companyId,omitempty"` // createonly (disabled read from db)
+	Company        Company          `json:"-" validate:"-"`
 	PatientDetails []PatientDetails `json:"-"`
 }

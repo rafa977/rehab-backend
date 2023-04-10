@@ -9,6 +9,7 @@ import (
 //NewPatientRepository --> Interface to PatientRepository
 type PatientRepository interface {
 	GetPatient(int) (models.Patient, error)
+	GetPatientByIdAndCompanyID(int, int) models.Patient
 	GetPatientKeyword(string) ([]models.Patient, error)
 	GetPatientAmka(int) ([]models.Patient, error)
 	GetAllPatients() ([]models.Patient, error)
@@ -53,4 +54,9 @@ func (db *patientService) UpdatePatient(patient models.Patient) (models.Patient,
 		return oldPatient, err
 	}
 	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
+}
+
+func (db *patientService) GetPatientByIdAndCompanyID(patientId int, companyId int) (patient models.Patient) {
+	db.dbConnection.Raw("select * from patient_details where id = ? and company_id = ?", patientId, companyId).Scan(&patient)
+	return patient
 }

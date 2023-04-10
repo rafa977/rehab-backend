@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
+	"github.com/rehab-backend/internal/pkg/handlers"
 	"github.com/rehab-backend/internal/pkg/models"
 	"github.com/rehab-backend/internal/repository"
 )
@@ -41,11 +43,14 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 	// sub.HandleFunc("/getPatientsDetailsByCompanyID", middleware.AuthenticationMiddleware(s.getPatientsDetailsByCompanyID))
 
 	sub.HandleFunc("/addPhTherapy", middleware.AuthenticationMiddleware(s.addPhTherapy))
+	sub.HandleFunc("/getPhTherapy", middleware.AuthenticationMiddleware(s.getPhTherapy))
+	sub.HandleFunc("/getPhTherapiesByCompID", middleware.AuthenticationMiddleware(s.getPhTherapiesByCompanyID))
 }
 
 func (s *phTherapyService) addDysfunction(w http.ResponseWriter, r *http.Request) {
 	var dysfunction models.Dysfunction
-	var response models.Response
+	var patientDetails models.PatientDetails
+	var isOwner = false
 
 	err := json.NewDecoder(r.Body).Decode(&dysfunction)
 	if err != nil {
@@ -53,73 +58,69 @@ func (s *phTherapyService) addDysfunction(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// TODO: check if patient ID has been registered under the company
-	// get patient details by ID
-	var patientDetails models.PatientDetails
-
-	// TODO: check company ID if exists and if caller is related
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
-
-	isOwner := false
-
 	for _, v := range compIDs {
 		if v == dysfunction.CompanyID {
 			isOwner = true
 		}
 	}
 	if !isOwner {
-		response.Status = "error"
-		response.Message = "You do not have permissions to add these data"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("You do not have permissions to add these data", w, r)
 		return
 	}
 
-	patientDetails = s.patientDetailsRepository.GetPatientDetailsByIdAndCompanyID(int(dysfunction.PatientDetailsID), int(dysfunction.CompanyID))
-	fmt.Println(patientDetails.CompanyID)
-
-	if patientDetails.ID == 0 {
-		response.Status = "error"
-		response.Message = "You must first register your patient to continue to therapies"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+	patientDetails, err = s.patientDetailsRepository.GetPatientDetails(int(dysfunction.PatientDetailsID))
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
+	fmt.Println(patientDetails.Patient.CompanyID)
 
 	dysfunction, err = s.phTherapyRepository.AddDysfunction(dysfunction)
 	if err != nil {
-		var newerr string
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
-		return
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 	} else {
-		response.Status = "success"
-		response.Message = ""
-		response.Response = "Registration Successful"
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceSuccessResponse("Registration of Dysfunction - Successful", w, r)
+	}
+}
+
+func (s *phTherapyService) getDysfunction(w http.ResponseWriter, r *http.Request) {
+	var dysfnuction models.Dysfunction
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
+	intID, err := strconv.Atoi(id)
+
+	dysfnuction, err = s.phTherapyRepository.GetDysfunction(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(dysfnuction)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) {
 	var phTherapy models.PhTherapy
-	var response models.Response
 	var dysfunction models.Dysfunction
+	var isOwner = false
 
 	err := json.NewDecoder(r.Body).Decode(&phTherapy)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	isOwner := false
 
-	dysfunction, err = s.phTherapyRepository.GetDysfunction(phTherapy.DysfunctionID)
+	dysfunction, err = s.phTherapyRepository.GetDysfunction(int(phTherapy.DysfunctionID))
 	if dysfunction.CompanyID > 0 {
 		// TODO: check company ID if exists and if caller is related
 		compIDs := gcontext.Get(r, "compIDs").([]uint)
@@ -130,13 +131,8 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	}
-
 	if !isOwner {
-		response.Status = "error"
-		response.Message = "You do not have permissions to access these data"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("You do not have permissions to access these data", w, r)
 		return
 	}
 
@@ -144,52 +140,61 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 
 	phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Somethign went wrong"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
-	response.Status = "success"
-	response.Message = "Registration of Therapy Successful"
-	response.Response = ""
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-	return
+	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", w, r)
 }
 
-// func (s *detailsService) getPatientsDetailsByCompanyID(w http.ResponseWriter, r *http.Request) {
-// 	var patients []models.PatientDetails
-// 	var response models.Response
+func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) {
+	var phTherapy models.PhTherapy
 
-// 	username := gcontext.Get(r, "username").(string)
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
 
-// 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-// 	response.Date = currentDate
+	phTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
 
-// 	patients, err := s.patientDetailsRepository.GetPatientDetailsByCompanyID(1)
-// 	if err != nil {
-// 		response.Status = "error"
-// 		response.Message = "Unknown Username or Password"
-// 		response.Response = ""
-// 		w.WriteHeader(http.StatusOK)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	jsonRetrievedAccount, err := json.Marshal(phTherapy)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	jsonRetrievedAccount, err := json.Marshal(patients)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
 
-// 	response.Status = "success"
-// 	response.Message = username
-// 	response.Response = string(jsonRetrievedAccount)
-// 	json.NewEncoder(w).Encode(response)
+func (s *phTherapyService) getPhTherapiesByCompanyID(w http.ResponseWriter, r *http.Request) {
+	var phTherapies []models.PhTherapy
 
-// }
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
+
+	phTherapies, err = s.phTherapyRepository.GetPhTherapiesByCompanyID(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(phTherapies)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
 
 // func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Request) {
 // 	var patient models.PatientDetails

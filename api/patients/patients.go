@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
@@ -44,22 +43,55 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
 }
 
+func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
+	var patient models.Patient
+
+	err := json.NewDecoder(r.Body).Decode(&patient)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// TODO: check company ID if exists and if caller is related
+	isOwner, ownerError := handlers.ValidateCompany(patient.CompanyID, r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(ownerError, w, r)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(patient)
+	if !isValid {
+		for _, fieldError := range errors {
+			http.Error(w, fieldError, http.StatusBadRequest)
+			return
+		}
+	}
+
+	patient, err = s.patientRepository.AddPatient(patient)
+	if err != nil {
+		var newerr string
+		if strings.Contains(err.Error(), "patients_amka_key") {
+			newerr = "Patient with same AMKA already exists!"
+		} else {
+			newerr = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(newerr, w, r)
+		return
+	}
+
+	handlers.ProduceSuccessResponse("Registration of Account - Successful", w, r)
+}
+
 func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 	var patients []models.Patient
 	var response models.Response
-
-	username := gcontext.Get(r, "username").(string)
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
 
 	patients, err := s.patientRepository.GetAllPatients()
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
@@ -69,29 +101,16 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) {
 	var patients []models.Patient
-	var response models.Response
 	var err error
-
-	username := gcontext.Get(r, "username").(string)
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
 
 	keyword := r.URL.Query().Get("keyword")
 	if keyword == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
-
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 
@@ -103,18 +122,9 @@ func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) 
 		patients, err = s.patientRepository.GetPatientKeyword(keyword)
 	}
 	if err != nil {
-		response.Status = "error"
-		response.Message = err.Error()
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-
-	// if account.Username != username {
-	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-	// 	return
-	// }
 
 	jsonRetrievedAccount, err := json.Marshal(patients)
 	if err != nil {
@@ -122,49 +132,24 @@ func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var patient models.Patient
-	var response models.Response
-
-	username := gcontext.Get(r, "username").(string)
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
-
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 	intID, err := strconv.Atoi(id)
 
 	patient, err = s.patientRepository.GetPatient(intID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-
-	// if account.Username != username {
-	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-	// 	return
-	// }
 
 	jsonRetrievedAccount, err := json.Marshal(patient)
 	if err != nil {
@@ -172,16 +157,11 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {
 	var patient models.Patient
-	var response models.Response
 
 	err := json.NewDecoder(r.Body).Decode(&patient)
 	if err != nil {
@@ -205,56 +185,8 @@ func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "Registration of Account - Successful")
-}
-
-func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
-	var patient models.Patient
-	var response models.Response
-
-	err := json.NewDecoder(r.Body).Decode(&patient)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// TODO: check company ID if exists and if caller is related
-
-	isValid, errors := handlers.ValidateInputs(patient)
-	if !isValid {
-		for _, fieldError := range errors {
-			http.Error(w, fieldError, http.StatusBadRequest)
-			return
-		}
-	}
-
-	patient, err = s.patientRepository.AddPatient(patient)
-	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "idx_patients_amka") {
-			newerr = "user already exists!"
-		} else {
-			newerr = "Bad Request"
-		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	response.Status = "success"
-	response.Message = "Registration of Account - Successful"
-	response.Response = ""
-	json.NewEncoder(w).Encode(response)
-	return
+	handlers.ProduceSuccessResponse("Update of Account - Successful", w, r)
 }
