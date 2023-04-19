@@ -30,6 +30,13 @@ type GeneralRepository interface {
 	DeleteDisorder(uint) (bool, error)
 	AddDisorder(models.Disorder) (models.Disorder, error)
 	UpdateDisorder(models.Disorder) (models.Disorder, error)
+
+	// Clinical Test Category
+	GetClinicalTestCategory(int) (models.ClinicalTestCategory, error)
+	GetAllClinicalTestCategories() ([]models.ClinicalTestCategory, error)
+	DeleteClinicalTestCategory(uint) (bool, error)
+	AddClinicalTestCategory(models.ClinicalTestCategory) (models.ClinicalTestCategory, error)
+	UpdateClinicalTestCategory(models.ClinicalTestCategory) (models.ClinicalTestCategory, error)
 }
 
 type generalService struct {
@@ -130,3 +137,32 @@ func (db *generalService) DeleteDisorder(id uint) (bool, error) {
 }
 
 // ############# Disorder CRUD END ############################# //
+
+// ############# ClinicalTestCategory CRUD ############################# //
+func (db *generalService) GetClinicalTestCategory(id int) (category models.ClinicalTestCategory, err error) {
+	return category, db.dbConnection.First(&category, id).Error
+}
+
+func (db *generalService) GetAllClinicalTestCategories() (category []models.ClinicalTestCategory, err error) {
+	return category, db.dbConnection.Find(&category).Error
+}
+
+func (db *generalService) AddClinicalTestCategory(category models.ClinicalTestCategory) (models.ClinicalTestCategory, error) {
+	return category, db.dbConnection.Create(&category).Error
+}
+
+func (db *generalService) UpdateClinicalTestCategory(category models.ClinicalTestCategory) (models.ClinicalTestCategory, error) {
+
+	var oldCategory models.ClinicalTestCategory
+
+	if err := db.dbConnection.First(&oldCategory, category.ID).Error; err != nil {
+		return oldCategory, err
+	}
+	return category, db.dbConnection.Model(&category).Updates(&category).Error
+}
+
+func (db *generalService) DeleteClinicalTestCategory(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.ClinicalTestCategory{}, id).Error
+}
+
+// ############# ClinicalTestCategory CRUD END ############################# //

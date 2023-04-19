@@ -24,7 +24,9 @@ func ConnectDB() *gorm.DB {
 
 	db.AutoMigrate(&models.Account{}, &models.Patient{}, &models.Therapy{}, &models.MedicalTherapy{}, &models.DrugTreatment{}, &models.Company{}, &models.Relation{},
 		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{}, &models.PersonalDisorder{}, &models.Disorder{}, &models.Visit{},
-		&models.Injury{}, &models.Dysfunction{}, &models.Protocol{}, &models.PhTherapy{}, &models.PhTherapyNote{}, &models.PhTherapyKey{}, &models.PatientExercise{})
+		&models.Injury{}, &models.Dysfunction{}, &models.Protocol{}, &models.PhTherapy{}, &models.PhTherapyNote{}, &models.PhTherapyKey{}, &models.PatientExercise{},
+		&models.ClinicalTestCategory{}, &models.ClinicalTests{}, &models.ClinicalTestDysfunction{}, &models.DysfunctionHistory{}
+	)
 
 	return db
 }
