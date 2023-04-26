@@ -37,6 +37,13 @@ type GeneralRepository interface {
 	DeleteClinicalTestCategory(uint) (bool, error)
 	AddClinicalTestCategory(models.ClinicalTestCategory) (models.ClinicalTestCategory, error)
 	UpdateClinicalTestCategory(models.ClinicalTestCategory) (models.ClinicalTestCategory, error)
+
+	// Clinical Tests
+	GetClinicalTest(int) (models.ClinicalTests, error)
+	GetAllClinicalTests() ([]models.ClinicalTests, error)
+	DeleteClinicalTest(uint) (bool, error)
+	AddClinicalTest(models.ClinicalTests) (models.ClinicalTests, error)
+	UpdateClinicalTest(models.ClinicalTests) (models.ClinicalTests, error)
 }
 
 type generalService struct {
@@ -166,3 +173,32 @@ func (db *generalService) DeleteClinicalTestCategory(id uint) (bool, error) {
 }
 
 // ############# ClinicalTestCategory CRUD END ############################# //
+
+// ############# ClinicalTest CRUD ############################# //
+func (db *generalService) GetClinicalTest(id int) (clinical models.ClinicalTests, err error) {
+	return clinical, db.dbConnection.First(&clinical, id).Error
+}
+
+func (db *generalService) GetAllClinicalTests() (clinical []models.ClinicalTests, err error) {
+	return clinical, db.dbConnection.Find(&clinical).Error
+}
+
+func (db *generalService) AddClinicalTest(clinical models.ClinicalTests) (models.ClinicalTests, error) {
+	return clinical, db.dbConnection.Create(&clinical).Error
+}
+
+func (db *generalService) UpdateClinicalTest(clinical models.ClinicalTests) (models.ClinicalTests, error) {
+
+	var oldClinical models.ClinicalTests
+
+	if err := db.dbConnection.First(&oldClinical, clinical.ID).Error; err != nil {
+		return oldClinical, err
+	}
+	return clinical, db.dbConnection.Model(&clinical).Updates(&clinical).Error
+}
+
+func (db *generalService) DeleteClinicalTest(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.ClinicalTests{}, id).Error
+}
+
+// ############# ClinicalTest CRUD END ############################# //

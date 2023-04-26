@@ -7,10 +7,10 @@ import (
 type Dysfunction struct {
 	gorm.Model
 
-	PatientDetailsID uint `json:"patientDetailsId"`
-	PatientDetails   PatientDetails
-	CompanyID        uint    `json:"companyId,omitempty"`
-	Company          Company `json:"-"`
+	PatientDetailsID uint           `json:"patientDetailsId" validate:"required"`
+	PatientDetails   PatientDetails `json:"patientDetails" validate:"-"`
+	CompanyID        uint           `json:"companyId,omitempty" validate:"required"`
+	Company          Company        `json:"-" validate:"-"`
 	Dysfunction      string
 	Description      string
 	Note             string

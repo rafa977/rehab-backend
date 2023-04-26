@@ -8,11 +8,6 @@ import (
 
 //TherapyRepository --> Interface to TherapyRepository
 type PhTherapyRepository interface {
-	AddDysfunction(models.Dysfunction) (models.Dysfunction, error)
-	GetDysfunction(int) (models.Dysfunction, error)
-	UpdateDysfunction(models.Dysfunction) (models.Dysfunction, error)
-	DeleteDysfunction(int) (bool, error)
-
 	AddPhTherapy(models.PhTherapy) (models.PhTherapy, error)
 	GetPhTherapy(int) (models.PhTherapy, error)
 	GetPhTherapiesByCompanyID(int) ([]models.PhTherapy, error)
@@ -31,29 +26,6 @@ func NewPhTherapyService() *phTherapyService {
 	return &phTherapyService{dbConnection: dbConnection}
 }
 
-///////////////////////////////////// Dysfunctions /////////////////////////////////////////////////////
-func (db *phTherapyService) AddDysfunction(dysfnuction models.Dysfunction) (models.Dysfunction, error) {
-	return dysfnuction, db.dbConnection.Create(&dysfnuction).Error
-}
-
-func (db *phTherapyService) GetDysfunction(id int) (dysfnuction models.Dysfunction, err error) {
-	return dysfnuction, db.dbConnection.First(&dysfnuction, id).Error
-}
-
-func (db *phTherapyService) UpdateDysfunction(dysfnuction models.Dysfunction) (models.Dysfunction, error) {
-	if err := db.dbConnection.First(&dysfnuction, dysfnuction.ID).Error; err != nil {
-		return dysfnuction, err
-	}
-	return dysfnuction, db.dbConnection.Model(&dysfnuction).Updates(&dysfnuction).Error
-}
-
-func (db *phTherapyService) DeleteDysfunction(id int) (bool, error) {
-	return true, db.dbConnection.Delete(&models.Dysfunction{}, id).Error
-}
-
-///////////////////////////////////// Dysfunctions /////////////////////////////////////////////////////
-
-///////////////////////////////////// Physio Therapy /////////////////////////////////////////////////////
 func (db *phTherapyService) AddPhTherapy(phTherapy models.PhTherapy) (models.PhTherapy, error) {
 	return phTherapy, db.dbConnection.Create(&phTherapy).Error
 }

@@ -8,7 +8,7 @@ type PatientDetails struct {
 	gorm.Model
 
 	PatientID         uint
-	Patient           Patient
+	Patient           Patient `json:"patient" validate:"-"`
 	CreatedBy         uint
 	LastUpdatedBy     uint
 	Therapies         []Therapy          `json:"therapies,omitempty"`

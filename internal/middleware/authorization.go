@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/context"
 	"github.com/rehab-backend/internal/pkg/handlers"
@@ -14,6 +15,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var response models.Response
+		currentDate := time.Now().Format("2006-01-02 15:04:05")
 
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -21,6 +23,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			response.Status = "error"
 			response.Message = "Authorization Required"
 			response.Response = ""
+			response.Date = currentDate
 			json.NewEncoder(w).Encode(response)
 			return
 		}
@@ -31,6 +34,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			response.Status = "error"
 			response.Message = "Bearer Token Required"
 			response.Response = ""
+			response.Date = currentDate
 			json.NewEncoder(w).Encode(response)
 			return
 		}
@@ -41,6 +45,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			response.Status = "error"
 			response.Message = "Authorization Failed"
 			response.Response = ""
+			response.Date = currentDate
 			json.NewEncoder(w).Encode(response)
 			return
 		} else {

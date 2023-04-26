@@ -37,76 +37,9 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 
 	sub := route.PathPrefix("/ph_therapy").Subrouter()
 
-	sub.HandleFunc("/addDysfunction", middleware.AuthenticationMiddleware(s.addDysfunction))
-	// sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
-	// sub.HandleFunc("/getPatientDetailsFull", middleware.AuthenticationMiddleware(s.getPatientDetailsFull))
-	// sub.HandleFunc("/getPatientsDetailsByCompanyID", middleware.AuthenticationMiddleware(s.getPatientsDetailsByCompanyID))
-
 	sub.HandleFunc("/addPhTherapy", middleware.AuthenticationMiddleware(s.addPhTherapy))
 	sub.HandleFunc("/getPhTherapy", middleware.AuthenticationMiddleware(s.getPhTherapy))
 	sub.HandleFunc("/getPhTherapiesByCompID", middleware.AuthenticationMiddleware(s.getPhTherapiesByCompanyID))
-}
-
-func (s *phTherapyService) addDysfunction(w http.ResponseWriter, r *http.Request) {
-	var dysfunction models.Dysfunction
-	var patientDetails models.PatientDetails
-	var isOwner = false
-
-	err := json.NewDecoder(r.Body).Decode(&dysfunction)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	compIDs := gcontext.Get(r, "compIDs").([]uint)
-	for _, v := range compIDs {
-		if v == dysfunction.CompanyID {
-			isOwner = true
-		}
-	}
-	if !isOwner {
-		handlers.ProduceErrorResponse("You do not have permissions to add these data", w, r)
-		return
-	}
-
-	patientDetails, err = s.patientDetailsRepository.GetPatientDetails(int(dysfunction.PatientDetailsID))
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
-	}
-	fmt.Println(patientDetails.Patient.CompanyID)
-
-	dysfunction, err = s.phTherapyRepository.AddDysfunction(dysfunction)
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-	} else {
-		handlers.ProduceSuccessResponse("Registration of Dysfunction - Successful", w, r)
-	}
-}
-
-func (s *phTherapyService) getDysfunction(w http.ResponseWriter, r *http.Request) {
-	var dysfnuction models.Dysfunction
-
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
-		return
-	}
-	intID, err := strconv.Atoi(id)
-
-	dysfnuction, err = s.phTherapyRepository.GetDysfunction(intID)
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
-	}
-
-	jsonRetrievedAccount, err := json.Marshal(dysfnuction)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +53,7 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	dysfunction, err = s.phTherapyRepository.GetDysfunction(int(phTherapy.DysfunctionID))
+	phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
 	if dysfunction.CompanyID > 0 {
 		// TODO: check company ID if exists and if caller is related
 		compIDs := gcontext.Get(r, "compIDs").([]uint)

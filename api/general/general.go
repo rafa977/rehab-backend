@@ -57,7 +57,15 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/getClinicalTestCategory", middleware.AuthenticationMiddleware(s.getClinicalTestCategory))
 	sub.HandleFunc("/deleteClinicalTestCategory", middleware.AuthenticationMiddleware(s.deleteClinicalTestCategory))
 	sub.HandleFunc("/getAllClinicalTestCategories", middleware.AuthenticationMiddleware(s.getAllClinicalTestCategories))
+
+	sub.HandleFunc("/addClinicalTest", middleware.AuthenticationMiddleware(s.addClinicalTest))
+	sub.HandleFunc("/updateClinicalTest", middleware.AuthenticationMiddleware(s.updateClinicalTest))
+	sub.HandleFunc("/getClinicalTest", middleware.AuthenticationMiddleware(s.getClinicalTest))
+	sub.HandleFunc("/deleteClinicalTest", middleware.AuthenticationMiddleware(s.deleteClinicalTest))
+	sub.HandleFunc("/getAllClinicalTests", middleware.AuthenticationMiddleware(s.getAllClinicalTests))
 }
+
+////////////////////// ############## DRUGS ################# /////////////////
 
 func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 	var drugs []models.Drug
@@ -67,10 +75,7 @@ func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 
 	drugs, err := s.generalRepository.GetAllDrugs()
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Something went wrong"
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
 
@@ -79,10 +84,7 @@ func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-
-	s.response.Status = "success"
-	s.response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(s.response)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
@@ -93,21 +95,14 @@ func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		s.response.Status = "error"
-		s.response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(s.response)
-
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 	intID, err := strconv.Atoi(id)
 
 	drug, err = s.generalRepository.GetDrug(intID)
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Record not found"
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Record not found", w, r)
 		return
 	}
 
@@ -116,12 +111,7 @@ func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-
-	s.response.Status = "success"
-	s.response.Message = ""
-	s.response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(s.response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
@@ -138,19 +128,11 @@ func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
 
 	_, err = s.generalRepository.DeleteDrug(drug.ID)
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Unknown Username or Password"
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
 
-	s.response.Status = "success"
-	s.response.Message = "Deleted"
-	s.response.Response = ""
-	json.NewEncoder(w).Encode(s.response)
-
+	handlers.ProduceSuccessResponse("Drug Deleted - Successful", w, r)
 }
 
 func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
@@ -178,23 +160,14 @@ func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		s.response.Status = "error"
-		s.response.Message = newerr
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "Drug Udated - Successful")
+	handlers.ProduceSuccessResponse("Drug Udated - Successful", w, r)
 }
 
 func (s *service) addDrug(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	var drug models.Drug
-	var response models.Response
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&drug)
@@ -219,15 +192,10 @@ func (s *service) addDrug(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "Registration of Drug - Successful")
+	handlers.ProduceSuccessResponse("Registration of Drug - Successful", w, r)
 }
 
 ////////////////////// ############## ALLERGIES ################# /////////////////
@@ -240,11 +208,7 @@ func (s *service) getAllAllergies(w http.ResponseWriter, r *http.Request) {
 
 	allergies, err := s.generalRepository.GetAllAllergies()
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Something went wrong"
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
 
@@ -253,12 +217,7 @@ func (s *service) getAllAllergies(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-
-	s.response.Status = "success"
-	s.response.Message = ""
-	s.response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(s.response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
@@ -269,21 +228,14 @@ func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		s.response.Status = "error"
-		s.response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(s.response)
-
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 	intID, err := strconv.Atoi(id)
 
 	allergy, err = s.generalRepository.GetAllergy(intID)
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Record not found"
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Record not found", w, r)
 		return
 	}
 
@@ -293,11 +245,7 @@ func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.response.Status = "success"
-	s.response.Message = ""
-	s.response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(s.response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
@@ -314,19 +262,11 @@ func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
 
 	_, err = s.generalRepository.DeleteAllergy(allergy.ID)
 	if err != nil {
-		s.response.Status = "error"
-		s.response.Message = "Something went wrong"
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
 
-	s.response.Status = "success"
-	s.response.Message = "Deleted"
-	s.response.Response = ""
-	json.NewEncoder(w).Encode(s.response)
-
+	handlers.ProduceSuccessResponse("Allergy Deleted - Successful", w, r)
 }
 
 func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
@@ -353,15 +293,10 @@ func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		s.response.Status = "error"
-		s.response.Message = newerr
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "Allergy Udated - Successful")
+	handlers.ProduceSuccessResponse("Allergy Udated - Successful", w, r)
 }
 
 func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
@@ -389,15 +324,10 @@ func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
 		} else {
 			newerr = "Bad Request"
 		}
-		s.response.Status = "error"
-		s.response.Message = newerr
-		s.response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(s.response)
+		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-
-	fmt.Fprintf(w, "Registration of Allergy - Successful")
+	handlers.ProduceSuccessResponse("Registration of Allergy - Successful", w, r)
 }
 
 ////////////////////// ############## DISORDERS ################# /////////////////
@@ -645,15 +575,186 @@ func (s *service) addClinicalTestCategory(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	// TODO: check company ID if exists and if caller is related
+	isOwner, ownerError := handlers.ValidateCompany(category.CompanyID, r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(ownerError, w, r)
+		return
+	}
+
 	category, err = s.generalRepository.AddClinicalTestCategory(category)
 	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "duplicate key value violates") {
+			msg = "Clinical test category already registered!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Registration of Category - Successful", w, r)
+}
+
+////////////////////// ############## CLINICAL TESTS ################# /////////////////
+func (s *service) getAllClinicalTests(w http.ResponseWriter, r *http.Request) {
+	var clinical []models.ClinicalTests
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	clinical, err := s.generalRepository.GetAllClinicalTests()
+	if err != nil {
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(clinical)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
+
+func (s *service) getClinicalTest(w http.ResponseWriter, r *http.Request) {
+	var clinical models.ClinicalTests
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
+
+	clinical, err = s.generalRepository.GetClinicalTest(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse("Record not found", w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(clinical)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
+
+func (s *service) deleteClinicalTest(w http.ResponseWriter, r *http.Request) {
+	var clinical models.ClinicalTests
+
+	err := json.NewDecoder(r.Body).Decode(&clinical)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	s.response.Date = currentDate
+
+	// TODO: check company ID if exists and if caller is related
+	isOwner, ownerError := handlers.ValidateCompany(clinical.CompanyID, r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(ownerError, w, r)
+		return
+	}
+
+	_, err = s.generalRepository.DeleteClinicalTest(clinical.ID)
+	if err != nil {
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Record Deleted", w, r)
+}
+
+func (s *service) updateClinicalTest(w http.ResponseWriter, r *http.Request) {
+	var clinical models.ClinicalTests
+
+	err := json.NewDecoder(r.Body).Decode(&clinical)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(clinical)
+	if !isValid {
+		for _, fieldError := range errors {
+			http.Error(w, fieldError, http.StatusBadRequest)
+			return
+		}
+	}
+
+	// TODO: check company ID if exists and if caller is related
+	isOwner, ownerError := handlers.ValidateCompany(clinical.CompanyID, r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(ownerError, w, r)
+		return
+	}
+
+	clinical, err = s.generalRepository.UpdateClinicalTest(clinical)
+	if err != nil {
 		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "Category already registered!"
+		if strings.Contains(err.Error(), "record not found") {
+			newerr = "Record not Found!"
 		} else {
 			newerr = "Bad Request"
 		}
 		handlers.ProduceErrorResponse(newerr, w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Category Udated - Successful", w, r)
+}
+
+func (s *service) addClinicalTest(w http.ResponseWriter, r *http.Request) {
+	var clinical models.ClinicalTests
+
+	err := json.NewDecoder(r.Body).Decode(&clinical)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(clinical)
+	if !isValid {
+		for _, fieldError := range errors {
+			http.Error(w, fieldError, http.StatusBadRequest)
+			return
+		}
+	}
+
+	// TODO: check company ID if exists and if caller is related
+	isOwner, ownerError := handlers.ValidateCompany(clinical.CompanyID, r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(ownerError, w, r)
+		return
+	}
+
+	category, err := s.generalRepository.GetClinicalTestCategory(int(clinical.ClinicalTestCategoryID))
+	if err != nil {
+		handlers.ProduceErrorResponse("Record not found", w, r)
+		return
+	}
+
+	if category.CompanyID != clinical.CompanyID {
+		handlers.ProduceErrorResponse("Company does not match", w, r)
+		return
+	}
+
+	clinical, err = s.generalRepository.AddClinicalTest(clinical)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "title") {
+			msg = "Clinical test already registered!"
+		} else if strings.Contains(err.Error(), "fk_") {
+			msg = "Clinical test category does not exist!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
 	handlers.ProduceSuccessResponse("Registration of Category - Successful", w, r)

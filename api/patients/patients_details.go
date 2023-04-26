@@ -45,8 +45,6 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 
 func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
 	var patientDetails models.PatientDetails
-	var isOwner = false
-	var patient models.Patient
 
 	err := json.NewDecoder(r.Body).Decode(&patientDetails)
 	if err != nil {
@@ -61,19 +59,10 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 		return
 	}
 
-	patient, err = s.patientRepository.GetPatient(int(patientDetails.PatientID))
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
-	}
-
-	for _, v := range compIDs {
-		if v == patient.CompanyID {
-			isOwner = true
-		}
-	}
-	if !isOwner {
-		handlers.ProduceErrorResponse("You do not have permissions to add these data", w, r)
+	// check patient id exists and is under same company
+	isPatientValid, validationError := s.patientRepository.CheckPatient(patientDetails.PatientID, compIDs)
+	if !isPatientValid {
+		handlers.ProduceErrorResponse(validationError, w, r)
 		return
 	}
 
@@ -81,13 +70,7 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 
 	patientDetails, err = s.patientDetailsRepository.AddPatientDetails(patientDetails)
 	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
-		} else {
-			newerr = "Bad Request"
-		}
-		handlers.ProduceErrorResponse(newerr, w, r)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 

@@ -38,7 +38,7 @@ func (db *accountService) GetCompanyByAccountID(id int) (company models.Company)
 }
 
 func (db *accountService) GetCompaniesByAccountID(id uint) (ids []uint) {
-	db.dbConnection.Raw("select id from companies where id = (select company_id as id from relation_companies rc where rc.relation_id = (select id as id from relations r where r.account_id = ?))", id).Scan(&ids)
+	db.dbConnection.Raw("select company_id as id from relation_companies rc where rc.relation_id in (select id as id from relations r where r.account_id = ?)", id).Scan(&ids)
 	return ids
 }
 

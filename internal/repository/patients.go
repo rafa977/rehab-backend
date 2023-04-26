@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"fmt"
+	"strings"
+
 	config "github.com/rehab-backend/config/database"
 	"github.com/rehab-backend/internal/pkg/models"
 	"gorm.io/gorm"
@@ -9,12 +12,13 @@ import (
 //NewPatientRepository --> Interface to PatientRepository
 type PatientRepository interface {
 	GetPatient(int) (models.Patient, error)
-	GetPatientByIdAndCompanyID(int, int) models.Patient
+	GetPatientByIdAndCompanyID(uint, uint) (models.Patient, error)
 	GetPatientKeyword(string) ([]models.Patient, error)
 	GetPatientAmka(int) ([]models.Patient, error)
 	GetAllPatients() ([]models.Patient, error)
 	AddPatient(models.Patient) (models.Patient, error)
 	UpdatePatient(models.Patient) (models.Patient, error)
+	CheckPatient(uint, []uint) (bool, string)
 }
 
 type patientService struct {
@@ -56,7 +60,41 @@ func (db *patientService) UpdatePatient(patient models.Patient) (models.Patient,
 	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
 }
 
-func (db *patientService) GetPatientByIdAndCompanyID(patientId int, companyId int) (patient models.Patient) {
-	db.dbConnection.Raw("select * from patient_details where id = ? and company_id = ?", patientId, companyId).Scan(&patient)
-	return patient
+func (db *patientService) GetPatientByIdAndCompanyID(patientId uint, companyId uint) (models.Patient, error) {
+	var patient models.Patient
+	return patient, db.dbConnection.Raw("select * from patient_details where id = ? and company_id = ?", patientId, companyId).Scan(&patient).Error
+}
+
+func (db *patientService) CheckPatient(id uint, compIDs []uint) (bool, string) {
+
+	var patient models.Patient
+	fmt.Println(id)
+	var err = db.dbConnection.First(&patient, id).Error
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "Patient does not exist"
+		} else {
+			msg = "Bad Request"
+		}
+		return false, msg
+	}
+	fmt.Println(patient.ID)
+
+	var isOwner = false
+	for _, id := range compIDs {
+		fmt.Println("we are here: ", id)
+		fmt.Println("we are here patient: ", patient.CompanyID)
+		fmt.Println("we are here patient: ", patient.Firstname)
+
+		if patient.CompanyID == id {
+			isOwner = true
+		}
+	}
+
+	if !isOwner {
+		return false, "Patient does not belong to your company"
+	}
+
+	return true, ""
 }

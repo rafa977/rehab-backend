@@ -8,9 +8,9 @@ type ClinicalTests struct {
 	gorm.Model
 
 	CompanyID              uint    `json:"companyId,omitempty"`
-	Company                Company `json:"-"`
-	Title                  string
+	Company                Company `json:"-" validate:"-"`
+	Title                  string  `gorm:"unique"`
 	ClinicalTestCategoryID uint
-	ClinicalTestCategory   ClinicalTestCategory
+	ClinicalTestCategory   ClinicalTestCategory `json:"-"`
 	Description            string
 }
