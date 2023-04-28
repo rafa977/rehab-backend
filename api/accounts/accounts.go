@@ -52,21 +52,21 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&account)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
 	isValid, errors := handlers.ValidateInputs(account)
 	if !isValid {
 		for _, fieldError := range errors {
-			http.Error(w, fieldError, http.StatusBadRequest)
+			handlers.ProduceErrorResponse(fieldError, w, r)
 			return
 		}
 	}
 
 	hashedPassword, hashError := hashPassword(account.Password)
 	if hashError != nil {
-		http.Error(w, hashError.Error(), http.StatusBadRequest)
+		handlers.ProduceErrorResponse(hashError.Error(), w, r)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var newerr string
 		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
+			newerr = "User already exists!"
 		} else {
 			newerr = "Bad Request"
 		}

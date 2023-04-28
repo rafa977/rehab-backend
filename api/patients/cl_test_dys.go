@@ -33,6 +33,7 @@ func (s *clTestDysService) Handle(route *mux.Router) {
 	sub := route.PathPrefix("/clinicalTestDysfunction").Subrouter()
 
 	sub.HandleFunc("/getClTestDys", middleware.AuthenticationMiddleware(s.getClTestDys))
+	sub.HandleFunc("/getClTestDysByDysID", middleware.AuthenticationMiddleware(s.getClTestDysByDysfunctionID))
 	sub.HandleFunc("/deleteClTestDys", middleware.AuthenticationMiddleware(s.deleteClTestDys))
 	sub.HandleFunc("/addClTestDys", middleware.AuthenticationMiddleware(s.addClTestDys))
 	sub.HandleFunc("/updateClTestDys", middleware.AuthenticationMiddleware(s.updateClTestDys))
@@ -66,16 +67,44 @@ func (s *clTestDysService) addClTestDys(w http.ResponseWriter, r *http.Request) 
 
 	clinicalTest, err = s.clinicalRepository.AddClTestDys(clinicalTest)
 	if err != nil {
-		var msg string
-		// if strings.Contains(err.Error(), "users_company_email_key") {
-		// 	newerr = "user already exists!"
-		// } else {
-		// 	newerr = "Bad Request"
-		// }
-		handlers.ProduceErrorResponse(msg, w, r)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 	handlers.ProduceSuccessResponse("Clinical Test Registration - Successful", w, r)
+}
+
+func (s *clTestDysService) getClTestDysByDysfunctionID(w http.ResponseWriter, r *http.Request) {
+	var clinicalTest []models.ClinicalTestDysfunction
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	intID, err := strconv.Atoi(id)
+
+	// TODO: check company ID if exists and if caller is related
+	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckDysfunctionCompanyClinical(compIDs, intID)
+	if !validCompanyID {
+		handlers.ProduceErrorResponse(validCompanyIDError, w, r)
+		return
+	}
+
+	clinicalTest, err = s.clinicalRepository.GetClTestDysByDysID(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrieved, err := json.Marshal(clinicalTest)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
 }
 
 func (s *clTestDysService) updateClTestDys(w http.ResponseWriter, r *http.Request) {

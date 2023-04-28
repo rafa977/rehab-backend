@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
@@ -15,12 +16,12 @@ import (
 )
 
 type dysfunctionService struct {
-	clinicalRepository repository.DysfunctionRepository
+	dysfunctionRepository repository.DysfunctionRepository
 }
 
 func NewDysfunctionService() *dysfunctionService {
 	return &dysfunctionService{
-		clinicalRepository: repository.NewDysfunctionService(),
+		dysfunctionRepository: repository.NewDysfunctionService(),
 	}
 }
 
@@ -32,6 +33,7 @@ func (s *dysfunctionService) Handle(route *mux.Router) {
 	sub := route.PathPrefix("/dysfunction").Subrouter()
 
 	sub.HandleFunc("/getDysfunction", middleware.AuthenticationMiddleware(s.getDysfunction))
+	sub.HandleFunc("/getAllDysfunctionsPatientID", middleware.AuthenticationMiddleware(s.getAllDysfunctionsPatientID))
 	sub.HandleFunc("/deleteDysfunction", middleware.AuthenticationMiddleware(s.deleteDysfunction))
 	sub.HandleFunc("/addDysfunction", middleware.AuthenticationMiddleware(s.addDysfunction))
 	sub.HandleFunc("/updateDysfunction", middleware.AuthenticationMiddleware(s.updateDysfunction))
@@ -61,18 +63,50 @@ func (s *dysfunctionService) addDysfunction(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	isValidPatient, validationError := s.clinicalRepository.CheckPatientDetails(dysfunction.PatientDetailsID, dysfunction.CompanyID)
+	isValidPatient, validationError := s.dysfunctionRepository.CheckPatientDetails(dysfunction.PatientDetailsID, dysfunction.CompanyID)
 	if !isValidPatient {
 		handlers.ProduceErrorResponse(validationError, w, r)
 		return
 	}
 
-	dysfunction, err = s.clinicalRepository.AddDysfunction(dysfunction)
+	dysfunction, err = s.dysfunctionRepository.AddDysfunction(dysfunction)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 	handlers.ProduceSuccessResponse("Dysfunction Registration - Successful", w, r)
+}
+
+func (s *dysfunctionService) getAllDysfunctionsPatientID(w http.ResponseWriter, r *http.Request) {
+	var dysfunctions []models.Dysfunction
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	patientDetailsID, err := strconv.Atoi(id)
+
+	isValidPatient, validationError := s.dysfunctionRepository.CheckPatientDetailsOwning(patientDetailsID, compIDs)
+	if !isValidPatient {
+		handlers.ProduceErrorResponse(validationError, w, r)
+		return
+	}
+
+	dysfunctions, err = s.dysfunctionRepository.GetAllDysfunctionsPatientDetailsID(patientDetailsID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrieved, err := json.Marshal(dysfunctions)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
 }
 
 func (s *dysfunctionService) updateDysfunction(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +126,7 @@ func (s *dysfunctionService) updateDysfunction(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	dysfunction, err = s.clinicalRepository.UpdateDysfunction(dysfunction)
+	dysfunction, err = s.dysfunctionRepository.UpdateDysfunction(dysfunction)
 	if err != nil {
 		var msg string
 		// if strings.Contains(err.Error(), "users_company_email_key") {
@@ -116,19 +150,26 @@ func (s *dysfunctionService) getDysfunction(w http.ResponseWriter, r *http.Reque
 	}
 
 	intID, err := strconv.Atoi(id)
+	compIDs := gcontext.Get(r, "compIDs").([]uint)
 
-	dysfunction, err = s.clinicalRepository.GetDysfunction(intID)
+	validateCompany, validationError := s.dysfunctionRepository.CheckDysfunctionCompany(compIDs, intID)
+	if !validateCompany {
+		handlers.ProduceErrorResponse(validationError, w, r)
+		return
+	}
+
+	dysfunction, err = s.dysfunctionRepository.GetDysfunction(intID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(dysfunction)
+	jsonRetrieved, err := json.Marshal(dysfunction)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
 }
 
 func (s *dysfunctionService) deleteDysfunction(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +186,7 @@ func (s *dysfunctionService) deleteDysfunction(w http.ResponseWriter, r *http.Re
 
 	intID, err := strconv.Atoi(id)
 
-	_, err = s.clinicalRepository.DeleteDysfunction(intID)
+	_, err = s.dysfunctionRepository.DeleteDysfunction(intID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
