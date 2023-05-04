@@ -10,6 +10,6 @@ type Company struct {
 	Address    string     `json:"address" validate:"required"`
 	City       string     `json:"city"`
 	PostalCode string     `json:"postalcode"`
-	TAXID      string     `json:"taxid"`
+	TAXID      string     `gorm:"unique" json:"taxid"`
 	Relations  []Relation `gorm:"many2many:relation_companies;"`
 }

@@ -50,18 +50,19 @@ func (s *service) Handle(route *mux.Router) {
 
 	sub.HandleFunc("/updateCompany", middleware.AuthenticationMiddleware(s.upateCompany))
 	sub.HandleFunc("/getCompany", middleware.AuthenticationMiddleware(s.getCompanyData))
+	sub.HandleFunc("/getCompaniesDetails", middleware.AuthenticationMiddleware(s.getCompaniesDetailsDataByAccountID))
+
 	// sub.HandleFunc("/addRelation", middleware.AuthenticationMiddleware(s.getAllPatients))
 
 }
 
 func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 	var company models.Company
-	var response models.Response
 	var relation models.Relation
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
@@ -71,28 +72,27 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 	isValid, errors := handlers.ValidateInputs(company)
 	if !isValid {
 		for _, fieldError := range errors {
-			http.Error(w, fieldError, http.StatusBadRequest)
+			handlers.ProduceErrorResponse(fieldError, w, r)
 			return
 		}
 	}
 
 	company, err = s.repository.RegisterCompany(company)
 	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
+		var msg string
+		if strings.Contains(err.Error(), "idx_companies_tax_id") {
+			msg = "Company already registered!"
 		} else {
-			newerr = "Bad Request"
+			msg = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
 
 	id := gcontext.Get(r, "id").(uint)
+	username := gcontext.Get(r, "username").(string)
+
+	retrievedCompanies := s.repository.GetCompaniesByAccountID(id)
 
 	relation.AccountID = id
 	relation.Companies = append(relation.Companies, company)
@@ -101,21 +101,23 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 
 	relation, err = s.repository.AddRelation(relation)
 	if err != nil {
-		var newerr string
+		var msg string
 		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
+			msg = "user already exists!"
 		} else {
-			newerr = "Bad Request"
+			msg = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "Registration of Company - Successful")
+	token, _, hasError := handlers.GenerateJWT(username, id, retrievedCompanies)
+	if hasError != nil {
+		http.Error(w, hasError.Error(), http.StatusBadRequest)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(token, w, r)
 }
 
 func (s *service) addRelation(w http.ResponseWriter, r *http.Request) {
@@ -191,6 +193,21 @@ func (s *service) getCompanyData(w http.ResponseWriter, r *http.Request) {
 	response.Message = username
 	response.Response = string(jsonRetrievedAccount)
 	json.NewEncoder(w).Encode(response)
+}
+
+func (s *service) getCompaniesDetailsDataByAccountID(w http.ResponseWriter, r *http.Request) {
+
+	id := gcontext.Get(r, "id").(uint)
+
+	retrievedCompanies := s.repository.GetCompaniesDetailsByAccountID(id)
+
+	jsonRetrieved, err := json.Marshal(retrievedCompanies)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
 }
 
 func (s *service) getRelationIDsByAccountID(w http.ResponseWriter, r *http.Request) {

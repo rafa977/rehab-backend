@@ -14,6 +14,8 @@ type CompanyRepository interface {
 	AddRelation(models.Relation) (models.Relation, error)
 	GetRelationsByAccountID(uint) ([]models.Relation, error)
 	GetRelationIDsByAccountID(int) ([]models.Relation, error)
+	GetCompaniesByAccountID(uint) []uint
+	GetCompaniesDetailsByAccountID(uint) []models.Company
 }
 
 type companyService struct {
@@ -58,6 +60,16 @@ func (db *companyService) GetRelationsByAccountID(id uint) (relation []models.Re
 func (db *companyService) GetRelationIDsByAccountID(id int) (relation []models.Relation, err error) {
 	// var relat models.Relation
 	return relation, db.dbConnection.Select("id").Where("account_id = ?", id).Preload("Companies").Find(&relation).Error
+}
+
+func (db *companyService) GetCompaniesByAccountID(id uint) (ids []uint) {
+	db.dbConnection.Raw("select company_id as id from relation_companies rc where rc.relation_id in (select id as id from relations r where r.account_id = ?)", id).Scan(&ids)
+	return ids
+}
+
+func (db *companyService) GetCompaniesDetailsByAccountID(id uint) (companies []models.Company) {
+	db.dbConnection.Raw("select * from companies where id in (select company_id as id from relation_companies rc where rc.relation_id in (select id as id from relations r where r.account_id = ?))", id).Scan(&companies)
+	return companies
 }
 
 // func (db *companyService) GetRelationsByCompanyID(id int) (relation []models.Relation, err error) {
