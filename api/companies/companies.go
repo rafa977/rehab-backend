@@ -80,7 +80,7 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 	company, err = s.repository.RegisterCompany(company)
 	if err != nil {
 		var msg string
-		if strings.Contains(err.Error(), "idx_companies_tax_id") {
+		if strings.Contains(err.Error(), "companies_tax_id") {
 			msg = "Company already registered!"
 		} else {
 			msg = "Bad Request"
@@ -91,8 +91,6 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 
 	id := gcontext.Get(r, "id").(uint)
 	username := gcontext.Get(r, "username").(string)
-
-	retrievedCompanies := s.repository.GetCompaniesByAccountID(id)
 
 	relation.AccountID = id
 	relation.Companies = append(relation.Companies, company)
@@ -110,6 +108,8 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
+
+	retrievedCompanies := s.repository.GetCompaniesByAccountID(id)
 
 	token, _, hasError := handlers.GenerateJWT(username, id, retrievedCompanies)
 	if hasError != nil {
