@@ -8,7 +8,7 @@ import (
 
 //ProductRepository --> Interface to ProductRepository
 type CompanyRepository interface {
-	GetCompanyByID(int) ([]models.Relation, error)
+	GetCompanyByID(int) (models.Company, error)
 	UpdateCompany(models.Company) (models.Company, error)
 	RegisterCompany(models.Company) (models.Company, error)
 	AddRelation(models.Relation) (models.Relation, error)
@@ -29,13 +29,13 @@ func NewCompanyService() *companyService {
 	return &companyService{dbConnection: dbConnection}
 }
 
-// func (db *companyService) GetCompanyByID(id int) (company models.Company, err error) {
-// 	return company, db.dbConnection.Preload("Relations").First(&company, id).Error
-// }
-
-func (db *companyService) GetCompanyByID(id int) (relations []models.Relation, err error) {
-	return relations, db.dbConnection.Preload("Account").Omit("password").Preload("Companies").Joins("JOIN relation_companies ON relation_companies.relation_id = relations.id").Where("relation_companies.company_id = ?", id).Find(&relations).Error
+func (db *companyService) GetCompanyByID(id int) (company models.Company, err error) {
+	return company, db.dbConnection.First(&company, id).Error
 }
+
+// func (db *companyService) GetCompanyByID(id int) (relations []models.Relation, err error) {
+// 	return relations, db.dbConnection.Preload("Account").Omit("password").Preload("Companies").Joins("JOIN relation_companies ON relation_companies.relation_id = relations.id").Where("relation_companies.company_id = ?", id).Find(&relations).Error
+// }
 
 func (db *companyService) UpdateCompany(company models.Company) (models.Company, error) {
 	var data models.Company

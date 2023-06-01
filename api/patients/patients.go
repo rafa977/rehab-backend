@@ -69,13 +69,15 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 
 	patient, err = s.patientRepository.AddPatient(patient)
 	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "patients_amka_key") {
-			newerr = "Patient with same AMKA already exists!"
+		var msg string
+		if strings.Contains(err.Error(), "idx_companyid_amka") {
+			msg = "Patient with same AMKA already exists!"
+		} else if strings.Contains(err.Error(), "fk_patients_company") {
+			msg = "Please register your company"
 		} else {
-			newerr = "Bad Request"
+			msg = "Bad Request"
 		}
-		handlers.ProduceErrorResponse(newerr, w, r)
+		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
 
@@ -147,7 +149,19 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 
 	patient, err = s.patientRepository.GetPatient(intID)
 	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "You are not authorized to access these data!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	ownsCompany, errMsg := handlers.ValidateCompany(patient.CompanyID, r)
+	if !ownsCompany {
+		handlers.ProduceErrorResponse(errMsg, w, r)
 		return
 	}
 

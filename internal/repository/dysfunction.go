@@ -92,7 +92,7 @@ func (db *dysfunctionService) CheckPatientDetails(id uint, compID uint) (bool, s
 	if err != nil {
 		var msg string
 		if strings.Contains(err.Error(), "record not found") {
-			msg = "Patient Details does not exist"
+			msg = "You are not authorized to access these data."
 		} else {
 			msg = "Bad Request"
 		}
@@ -114,7 +114,7 @@ func (db *dysfunctionService) CheckPatientDetailsOwning(id int, compIDs []uint) 
 	if err != nil {
 		var msg string
 		if strings.Contains(err.Error(), "record not found") {
-			msg = "Patient Details does not exist"
+			msg = "You are not authorized to access these data"
 		} else {
 			msg = "Bad Request"
 		}

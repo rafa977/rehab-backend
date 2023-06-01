@@ -8,12 +8,13 @@ import (
 
 //ProductRepository --> Interface to ProductRepository
 type AccountsRepository interface {
-	GetAccountByID(int) (models.Account, error)
+	GetAccountByID(uint) (models.Account, error)
+	GetAccountByIDWithPassword(uint) (models.Account, error)
 	GetAccountByUsernameForLogin(string) (models.Account, error)
 	GetAccountByUsername(string) (models.Account, error)
 	UpdateAccount(models.Account) (models.Account, error)
 	AddUser(models.Account) (models.Account, error)
-	GetCompanyByAccountID(int) models.Company
+	GetCompanyByAccountID(uint) models.Company
 	GetCompaniesByAccountID(uint) []uint
 }
 
@@ -28,11 +29,11 @@ func NewAccountService() *accountService {
 	return &accountService{dbConnection: dbConnection}
 }
 
-func (db *accountService) GetAccountByID(id int) (account models.Account, err error) {
+func (db *accountService) GetAccountByID(id uint) (account models.Account, err error) {
 	return account, db.dbConnection.Omit("password").First(&account, id).Error
 }
 
-func (db *accountService) GetCompanyByAccountID(id int) (company models.Company) {
+func (db *accountService) GetCompanyByAccountID(id uint) (company models.Company) {
 	db.dbConnection.Raw("select * from companies where id = (select company_id as id from relation_companies rc where rc.relation_id = (select id as id from relations r where r.account_id = ?))", id).Scan(&company)
 	return company
 }
@@ -48,6 +49,10 @@ func (db *accountService) GetCompanyByAccountByID(id int) (account models.Accoun
 
 func (db *accountService) GetAccountByUsernameForLogin(username string) (account models.Account, err error) {
 	return account, db.dbConnection.Where("username = ?", username).First(&account).Error
+}
+
+func (db *accountService) GetAccountByIDWithPassword(id uint) (account models.Account, err error) {
+	return account, db.dbConnection.First(&account, id).Error
 }
 
 func (db *accountService) GetAccountByUsername(username string) (account models.Account, err error) {

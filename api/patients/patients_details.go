@@ -39,7 +39,7 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 
 	sub.HandleFunc("/patientDetailsRegistration", middleware.AuthenticationMiddleware(s.patientDetailsRegistration))
 	sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
-	sub.HandleFunc("/getPatientDetailsFull", middleware.AuthenticationMiddleware(s.getPatientDetailsFull))
+	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetailsFull))
 	sub.HandleFunc("/getPatientsDetailsByCompanyID", middleware.AuthenticationMiddleware(s.getPatientsDetailsByCompanyID))
 }
 
@@ -96,7 +96,8 @@ func (s *detailsService) getPatientsDetailsByCompanyID(w http.ResponseWriter, r 
 }
 
 func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Request) {
-	var patient models.PatientDetails
+	var patientDetails models.PatientDetails
+	var patient models.Patient
 	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
@@ -110,13 +111,31 @@ func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Re
 
 	intID, err := strconv.Atoi(id)
 
-	patient, err = s.patientDetailsRepository.GetPatientDetailsFull(intID)
+	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsFull(intID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "You are not authorized to access these data!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	patient, err = s.patientRepository.GetPatient(int(patientDetails.PatientID))
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(patient)
+	ownsCompany, errMsg := handlers.ValidateCompany(patient.CompanyID, r)
+	if !ownsCompany {
+		handlers.ProduceErrorResponse(errMsg, w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(patientDetails)
 	if err != nil {
 		fmt.Println(err)
 		return

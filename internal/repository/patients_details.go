@@ -42,7 +42,7 @@ func (db *patientService) GetPatientDetailsByCompanyID(companyId int) (patientDe
 }
 
 func (db *patientService) GetPatientDetailsFull(id int) (patientDetails models.PatientDetails, err error) {
-	return patientDetails, db.dbConnection.Preload("Injuries").Preload("PersonalAllergies").Preload("DrugTreatments").Preload("Therapies").Preload("MedicalTherapies").First(&patientDetails, id).Error
+	return patientDetails, db.dbConnection.Preload("Injuries").Preload("PersonalAllergies").Preload("DrugTreatments").Preload("DrugTreatments.Drug").Preload("Therapies").Preload("MedicalTherapies").First(&patientDetails, id).Error
 }
 
 // func (db *patientService) GetPatientFull(id int) (patient models.Patient, err error) {

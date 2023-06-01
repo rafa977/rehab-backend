@@ -155,44 +155,34 @@ func (s *service) addRelation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) getCompanyData(w http.ResponseWriter, r *http.Request) {
-	var company []models.Relation
-	var response models.Response
+	var company models.Company
 
-	username := gcontext.Get(r, "username").(string)
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
-
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
-
+	intID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-	intID, err := strconv.Atoi(id)
+
+	isOwner, errMsg := handlers.ValidateCompany(uint(intID), r)
+	if !isOwner {
+		handlers.ProduceErrorResponse(errMsg, w, r)
+		return
+	}
 
 	company, err = s.repository.GetCompanyByID(intID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(company)
+	jsonRetrievedCompany, err := json.Marshal(company)
 	if err != nil {
-		fmt.Println(err)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	response.Status = "success"
-	response.Message = username
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedCompany), w, r)
+	return
 }
 
 func (s *service) getCompaniesDetailsDataByAccountID(w http.ResponseWriter, r *http.Request) {

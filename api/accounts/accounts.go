@@ -41,6 +41,7 @@ func (s *service) Handle(route *mux.Router) {
 
 	sub.HandleFunc("/registerAccount", s.accountRegistration)
 	sub.HandleFunc("/updateAccount", middleware.AuthenticationMiddleware(s.updateAccount))
+	sub.HandleFunc("/updatePassword", middleware.AuthenticationMiddleware(s.updatePassword))
 	sub.HandleFunc("/login", s.login)
 	sub.HandleFunc("/getAccountById", middleware.AuthenticationMiddleware(s.getAccountById))
 	sub.HandleFunc("/getCompaniesByAccountId", middleware.AuthenticationMiddleware(s.getCompaniesByAccountId))
@@ -71,65 +72,118 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	account.Password = hashedPassword
-	account.CreatedOn = time.Now()
+
+	// birthDate, timeParsError := time.Parse("2006-01-02", account.Birthdate.String())
+	// if timeParsError != nil {
+	// 	handlers.ProduceErrorResponse(timeParsError.Error(), w, r)
+	// }
 
 	account, err = s.repository.AddUser(account)
 	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "User already exists!"
+		var msg string
+		if strings.Contains(err.Error(), "email_key") {
+			msg = "User already exists!"
+		} else if strings.Contains(err.Error(), "username_key") {
+			msg = "User already exists!"
 		} else {
-			newerr = "Bad Request"
+			msg = "Bad Request"
 		}
-		handlers.ProduceErrorResponse(newerr, w, r)
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
 	}
 	handlers.ProduceSuccessResponse("Registration of Account - Successful", w, r)
 }
 
-func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {
-	var account models.Account
+func (s *service) updatePassword(w http.ResponseWriter, r *http.Request) {
+	var credentials models.Credentials
+	var retrievedAccount models.Account
 
-	err := json.NewDecoder(r.Body).Decode(&account)
+	id := gcontext.Get(r, "id").(uint)
+
+	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	isValid, errors := handlers.ValidateInputs(account)
+	isValid, errors := handlers.ValidateInputs(credentials)
 	if !isValid {
 		for _, fieldError := range errors {
-			http.Error(w, fieldError, http.StatusBadRequest)
+			handlers.ProduceErrorResponse(fieldError, w, r)
 			return
 		}
 	}
 
-	hashedPassword, hashError := hashPassword(account.Password)
-	if hashError != nil {
-		http.Error(w, hashError.Error(), http.StatusBadRequest)
-		return
-	}
-
-	account.Password = hashedPassword
-	account.CreatedOn = time.Now()
-
-	var response models.Response
-
-	account, err = s.repository.UpdateAccount(account)
+	retrievedAccount, err = s.repository.GetAccountByIDWithPassword(id)
 	if err != nil {
-		var newerr string
-		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
-		} else {
-			newerr = "Bad Request"
-		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("You are not authorized to access this data", w, r)
 		return
 	}
-	fmt.Fprintf(w, "Update Account - Successful")
+
+	hashedPassword, hashError := hashPassword(credentials.NewPassword)
+	if hashError != nil {
+		handlers.ProduceErrorResponse(hashError.Error(), w, r)
+		return
+	}
+	passwordValid := checkPasswordHash(credentials.OldPassword, retrievedAccount.Password)
+
+	if passwordValid {
+		retrievedAccount.Password = hashedPassword
+	} else {
+		handlers.ProduceErrorResponse("Old password does not match", w, r)
+		return
+	}
+
+	_, err = s.repository.UpdateAccount(retrievedAccount)
+	if err != nil {
+		msg := "Bad Request"
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Update of Password - Successful", w, r)
+}
+
+func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {
+	var updatedAccount models.AccountInt
+	var retrievedAccount models.Account
+
+	id := gcontext.Get(r, "id").(uint)
+
+	err := json.NewDecoder(r.Body).Decode(&updatedAccount)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(updatedAccount)
+	if !isValid {
+		for _, fieldError := range errors {
+			handlers.ProduceErrorResponse(fieldError, w, r)
+			return
+		}
+	}
+
+	// account.Password = hashedPassword
+
+	retrievedAccount, err = s.repository.GetAccountByID(id)
+	if err != nil {
+		handlers.ProduceErrorResponse("You are not authorized to access this data", w, r)
+		return
+	}
+
+	retrievedAccount.Firstname = updatedAccount.Firstname
+	retrievedAccount.Lastname = updatedAccount.Lastname
+	retrievedAccount.Birthdate = updatedAccount.Birthdate
+	retrievedAccount.Address = updatedAccount.Address
+	retrievedAccount.Job = updatedAccount.Job
+
+	_, err = s.repository.UpdateAccount(retrievedAccount)
+	if err != nil {
+		msg := "Bad Request"
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Update of Account - Successful", w, r)
 }
 
 func (s *service) login(w http.ResponseWriter, r *http.Request) {
@@ -147,11 +201,11 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if account.Username == "" {
-		http.Error(w, "Username cannot be empty", http.StatusBadRequest)
+		handlers.ProduceErrorResponse("Username cannot be empty", w, r)
 		return
 	}
 	if account.Password == "" {
-		http.Error(w, "Password cannot be empty", http.StatusBadRequest)
+		handlers.ProduceErrorResponse("Password cannot be empty", w, r)
 		return
 	}
 
@@ -159,11 +213,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 
 	retrievedAccount, err = s.repository.GetAccountByUsernameForLogin(account.Username)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "Unknown Username or Password"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("Unknown Username or Password", w, r)
 		return
 	}
 
@@ -183,7 +233,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 
 		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID, retrievedCompanies)
 		if hasError != nil {
-			http.Error(w, hasError.Error(), http.StatusBadRequest)
+			handlers.ProduceErrorResponse(hasError.Error(), w, r)
 			return
 		}
 
@@ -218,11 +268,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request) {
-	var response models.Response
 	var retrievedCompanies []uint
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
 
 	id := gcontext.Get(r, "id").(uint)
 
@@ -234,55 +280,37 @@ func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
 	var response models.Response
 	var retrievedAccount models.Account
-	var company models.Company
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		response.Status = "error"
-		response.Message = "Please input all required fields."
-		json.NewEncoder(w).Encode(response)
-
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 
-	intID, err := strconv.Atoi(id)
+	uintID := uint(id)
 
 	username := gcontext.Get(r, "username").(string)
 
-	retrievedAccount, err = s.repository.GetAccountByID(intID)
+	retrievedAccount, err = s.repository.GetAccountByID(uintID)
 	if err != nil {
-		response.Status = "error"
-		response.Message = "You are not authorized to access this data"
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		handlers.ProduceErrorResponse("You are not authorized to access this data", w, r)
 		return
 	}
 
 	if retrievedAccount.Username != username {
-		http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
+		handlers.ProduceErrorResponse("You are not authorized to view this data", w, r)
 		return
 	}
-
-	fmt.Println(intID)
-
-	company = s.repository.GetCompanyByAccountID(intID)
-	fmt.Println(company)
 
 	jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
 	if err != nil {
@@ -290,11 +318,7 @@ func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Status = "success"
-	response.Message = ""
-	response.Response = string(jsonRetrievedAccount)
-	json.NewEncoder(w).Encode(response)
-
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func deleteAccountById(w http.ResponseWriter, r *http.Request) {
