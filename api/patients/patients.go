@@ -38,9 +38,10 @@ func (s *service) Handle(route *mux.Router) {
 
 	sub.HandleFunc("/registerPatient", middleware.AuthenticationMiddleware(s.patientRegistration))
 	sub.HandleFunc("/updatePatient", middleware.AuthenticationMiddleware(s.updatePatient))
-	sub.HandleFunc("/getPatient", middleware.AuthenticationMiddleware(s.getPatientData))
+	sub.HandleFunc("/getPatient/{id}", middleware.AuthenticationMiddleware(s.getPatientData))
 	sub.HandleFunc("/searchPatient", middleware.AuthenticationMiddleware(s.getPatientDataKeyword))
 	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
+	sub.HandleFunc("/getAllPatientsCompanyID/{id}", middleware.AuthenticationMiddleware(s.getAllPatientsByCompanyId))
 }
 
 func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +107,33 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
+func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Request) {
+	var patients []models.Patient
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
+
+	patients, err = s.patientRepository.GetAllPatientsByCompanyId(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
+
 func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) {
 	var patients []models.Patient
 	var err error
@@ -140,7 +168,9 @@ func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) 
 func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 	var patient models.Patient
 
-	id := r.URL.Query().Get("id")
+	params := mux.Vars(r)
+
+	id := params["id"]
 	if id == "" {
 		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return

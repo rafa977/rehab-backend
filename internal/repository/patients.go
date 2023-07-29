@@ -20,6 +20,7 @@ type PatientRepository interface {
 	AddPatient(models.Patient) (models.Patient, error)
 	UpdatePatient(models.Patient) (models.Patient, error)
 	CheckPatient(uint, []uint) (bool, string)
+	GetAllPatientsByCompanyId(int) ([]models.Patient, error)
 }
 
 type patientService struct {
@@ -50,7 +51,11 @@ func (db *patientService) GetPatientAmka(amka int) (patients []models.Patient, e
 }
 
 func (db *patientService) GetAllPatients() (patients []models.Patient, err error) {
-	return patients, db.dbConnection.Find(&patients).Error
+	return patients, db.dbConnection.Preload("Company").Find(&patients).Error
+}
+
+func (db *patientService) GetAllPatientsByCompanyId(id int) (patients []models.Patient, err error) {
+	return patients, db.dbConnection.Preload("Company").Where("company_id = ?", id).Find(&patients).Error
 }
 
 func (db *patientService) AddPatient(patient models.Patient) (models.Patient, error) {

@@ -14,7 +14,7 @@ type Account struct {
 	Lastname  string `json:"lastname"`
 	Email     string `gorm:"unique" json:"email" validate:"required,email,max=128"`
 	Address   string
-	Amka      string     `json:"amka"`
+	Amka      int        `json:"amka"`
 	Birthdate CustomDate `gorm:"embedded" json:"birthdate"`
 	Job       string     `gorm:"default:null"`
 	Relations []Relation

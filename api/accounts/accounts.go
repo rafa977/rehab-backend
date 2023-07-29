@@ -91,7 +91,37 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Account - Successful", w, r)
+
+	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil)
+	if hasError != nil {
+		handlers.ProduceErrorResponse(hasError.Error(), w, r)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: expTime,
+	})
+
+	account.Password = ""
+
+	jsonRetrievedAccount, err := json.Marshal(account)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+
+	var response models.Response
+	response.Date = currentDate
+
+	response.Response = token
+	response.Status = "success"
+	response.Message = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
+
+	return
 }
 
 func (s *service) updatePassword(w http.ResponseWriter, r *http.Request) {
