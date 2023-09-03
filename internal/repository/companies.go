@@ -16,6 +16,8 @@ type CompanyRepository interface {
 	GetRelationIDsByAccountID(int) ([]models.Relation, error)
 	GetCompaniesByAccountID(uint) []uint
 	GetCompaniesDetailsByAccountID(uint) []models.Company
+	AddInvitationUser(models.SmartRegisterLink) (models.SmartRegisterLink, error)
+	GetInvitationToken(string) (models.SmartRegisterLink, error)
 }
 
 type companyService struct {
@@ -70,6 +72,14 @@ func (db *companyService) GetCompaniesByAccountID(id uint) (ids []uint) {
 func (db *companyService) GetCompaniesDetailsByAccountID(id uint) (companies []models.Company) {
 	db.dbConnection.Raw("select * from companies where id in (select company_id as id from relation_companies rc where rc.relation_id in (select id as id from relations r where r.account_id = ?))", id).Scan(&companies)
 	return companies
+}
+
+func (db *companyService) AddInvitationUser(account models.SmartRegisterLink) (models.SmartRegisterLink, error) {
+	return account, db.dbConnection.Save(&account).Error
+}
+
+func (db *companyService) GetInvitationToken(token string) (smartRegisterLink models.SmartRegisterLink, err error) {
+	return smartRegisterLink, db.dbConnection.Where("token = ?", token).Find(&smartRegisterLink).Error
 }
 
 // func (db *companyService) GetRelationsByCompanyID(id int) (relation []models.Relation, err error) {

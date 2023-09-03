@@ -12,7 +12,8 @@ type Patient struct {
 	Address        string
 	Amka           int        `gorm:"uniqueIndex:idx_companyid_amka"  json:"amka" validate:"required"`
 	Birthdate      CustomDate `gorm:"embedded" json:"birthdate" validate:"required"`
-	Job            string
+	Job            string     `json:"phone"`
+	Phone          string
 	CompanyID      uint             `gorm:"uniqueIndex:idx_companyid_amka" json:"companyId,omitempty"` // createonly (disabled read from db)
 	Company        Company          `validate:"-"`
 	PatientDetails []PatientDetails `json:"-"`

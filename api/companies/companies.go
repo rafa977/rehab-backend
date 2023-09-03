@@ -60,6 +60,12 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 	var company models.Company
 	var relation models.Relation
 
+	roleID := gcontext.Get(r, "roleID").(uint)
+	if roleID != 1 {
+		handlers.ProduceErrorResponse("You are not authorized to do this action.", w, r)
+		return
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
@@ -96,6 +102,7 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 	relation.Companies = append(relation.Companies, company)
 	relation.Title = "CEO"
 	relation.Type = "admin"
+	relation.AddedByID = id
 
 	relation, err = s.repository.AddRelation(relation)
 	if err != nil {
@@ -111,7 +118,7 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 
 	retrievedCompanies := s.repository.GetCompaniesByAccountID(id)
 
-	token, _, hasError := handlers.GenerateJWT(username, id, retrievedCompanies)
+	token, _, hasError := handlers.GenerateJWT(username, id, retrievedCompanies, 1)
 	if hasError != nil {
 		http.Error(w, hasError.Error(), http.StatusBadRequest)
 		return

@@ -39,7 +39,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		username, id, compIDs, err := handlers.ValidateToken(tokenString)
+		username, id, compIDs, roleID, err := handlers.ValidateToken(tokenString)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			response.Status = "error"
@@ -53,6 +53,7 @@ func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			context.Set(r, "username", username)
 			context.Set(r, "id", id)
 			context.Set(r, "compIDs", compIDs)
+			context.Set(r, "roleID", roleID)
 			next.ServeHTTP(w, r)
 		}
 	}

@@ -7,3 +7,8 @@ type AccountInt struct {
 	Birthdate CustomDate `json:"birthdate"`
 	Job       string     `json:"job"`
 }
+
+type AccountBasic struct {
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+}

@@ -19,7 +19,8 @@ import (
 )
 
 type service struct {
-	repository repository.AccountsRepository
+	repository        repository.AccountsRepository
+	companyRepository repository.CompanyRepository
 }
 
 type Claims struct {
@@ -29,7 +30,10 @@ type Claims struct {
 }
 
 func NewService() *service {
-	return &service{repository: repository.NewAccountService()}
+	return &service{
+		repository:        repository.NewAccountService(),
+		companyRepository: repository.NewCompanyService(),
+	}
 }
 
 func (s *service) RegisterHandlers(route *mux.Router) {
@@ -39,7 +43,9 @@ func (s *service) RegisterHandlers(route *mux.Router) {
 func (s *service) Handle(route *mux.Router) {
 	sub := route.PathPrefix("/user").Subrouter()
 
+	sub.HandleFunc("/adminRegistration", s.adminRegistration)
 	sub.HandleFunc("/registerAccount", s.accountRegistration)
+	sub.HandleFunc("/userInvitation", middleware.AuthenticationMiddleware(s.userInvitation))
 	sub.HandleFunc("/updateAccount", middleware.AuthenticationMiddleware(s.updateAccount))
 	sub.HandleFunc("/updatePassword", middleware.AuthenticationMiddleware(s.updatePassword))
 	sub.HandleFunc("/login", s.login)
@@ -48,7 +54,7 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/deleteAccountById", deleteAccountById)
 }
 
-func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
+func (s *service) adminRegistration(w http.ResponseWriter, r *http.Request) {
 	var account models.Account
 
 	err := json.NewDecoder(r.Body).Decode(&account)
@@ -72,11 +78,7 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	account.Password = hashedPassword
-
-	// birthDate, timeParsError := time.Parse("2006-01-02", account.Birthdate.String())
-	// if timeParsError != nil {
-	// 	handlers.ProduceErrorResponse(timeParsError.Error(), w, r)
-	// }
+	account.RoleID = 1
 
 	account, err = s.repository.AddUser(account)
 	if err != nil {
@@ -92,7 +94,7 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil)
+	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil, 1)
 	if hasError != nil {
 		handlers.ProduceErrorResponse(hasError.Error(), w, r)
 		return
@@ -122,6 +124,171 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 
 	return
+}
+
+func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
+	var account models.Account
+	var relation models.Relation
+
+	verifToken := r.URL.Query().Get("token")
+	if verifToken == "" {
+		handlers.ProduceErrorResponse("Verification token invalid", w, r)
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&account)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	retrievedSmartRegisteredLink, err := s.companyRepository.GetInvitationToken(verifToken)
+	if err != nil {
+		handlers.ProduceErrorResponse("Invalid Token", w, r)
+		return
+	}
+
+	if retrievedSmartRegisteredLink.Email != account.Email {
+		handlers.ProduceErrorResponse("Invalid Token.", w, r)
+		return
+	}
+
+	isValid, errors := handlers.ValidateInputs(account)
+	if !isValid {
+		for _, fieldError := range errors {
+			handlers.ProduceErrorResponse(fieldError, w, r)
+			return
+		}
+	}
+
+	hashedPassword, hashError := hashPassword(account.Password)
+	if hashError != nil {
+		handlers.ProduceErrorResponse(hashError.Error(), w, r)
+		return
+	}
+
+	account.Password = hashedPassword
+	account.RoleID = 2
+
+	account, err = s.repository.AddUser(account)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "email_key") {
+			msg = "User already exists!"
+		} else if strings.Contains(err.Error(), "username_key") {
+			msg = "User already exists!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	retrievedCompany, err := s.companyRepository.GetCompanyByID(int(retrievedSmartRegisteredLink.CompanyID))
+	if err != nil {
+		handlers.ProduceErrorResponse("Invalid Token", w, r)
+		return
+	}
+
+	relation.AccountID = account.ID
+	relation.Companies = append(relation.Companies, retrievedCompany)
+	relation.Title = "Employee"
+	relation.Type = "user"
+	relation.AddedByID = retrievedSmartRegisteredLink.AddedByID
+
+	relation, err = s.companyRepository.AddRelation(relation)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "users_company_email_key") {
+			msg = "user already exists!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil, 2)
+	if hasError != nil {
+		handlers.ProduceErrorResponse(hasError.Error(), w, r)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: expTime,
+	})
+
+	account.Password = ""
+
+	jsonRetrievedAccount, err := json.Marshal(account)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+
+	var response models.Response
+	response.Date = currentDate
+
+	response.Response = token
+	response.Status = "success"
+	response.Message = string(jsonRetrievedAccount)
+	json.NewEncoder(w).Encode(response)
+
+	return
+}
+
+func (s *service) userInvitation(w http.ResponseWriter, r *http.Request) {
+	var account models.SmartRegisterLink
+
+	roleID := gcontext.Get(r, "roleID").(uint)
+	fmt.Println(roleID)
+
+	if roleID != 1 {
+		handlers.ProduceErrorResponse("You are not authorized to do this action.", w, r)
+		return
+	}
+
+	fmt.Println(roleID)
+
+	id := gcontext.Get(r, "id").(uint)
+	if roleID != 1 {
+		handlers.ProduceErrorResponse("You are not authorized to do this action.", w, r)
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&account)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	ownsCompany, errMsg := handlers.ValidateCompany(account.CompanyID, r)
+	if !ownsCompany {
+		handlers.ProduceErrorResponse(errMsg, w, r)
+		return
+	}
+
+	newAccount := models.NewSmartRegisterLink()
+	newAccount.CompanyID = account.CompanyID
+	newAccount.Email = account.Email
+	newAccount.AddedByID = id
+
+	newAccount, err = s.companyRepository.AddInvitationUser(newAccount)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "email_key") {
+			msg = "User already has been invited!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	handlers.ProduceSuccessResponse("User has been invited", w, r)
 }
 
 func (s *service) updatePassword(w http.ResponseWriter, r *http.Request) {
@@ -261,7 +428,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 
 		retrievedCompanies := s.repository.GetCompaniesByAccountID(retrievedAccount.ID)
 
-		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID, retrievedCompanies)
+		token, expTime, hasError := handlers.GenerateJWT(account.Username, retrievedAccount.ID, retrievedCompanies, retrievedAccount.RoleID)
 		if hasError != nil {
 			handlers.ProduceErrorResponse(hasError.Error(), w, r)
 			return
