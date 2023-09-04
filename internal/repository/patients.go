@@ -16,11 +16,13 @@ type PatientRepository interface {
 	GetPatientByIdAndCompanyID(uint, uint) (models.Patient, error)
 	GetPatientKeyword(string) ([]models.Patient, error)
 	GetPatientAmka(int) ([]models.Patient, error)
-	GetAllPatients() ([]models.Patient, error)
+	GetAllPatients([]uint) ([]models.Patient, error)
+	GetAllPatientsEmployee([]uint) ([]models.PatientEmployee, error)
 	AddPatient(models.Patient) (models.Patient, error)
 	UpdatePatient(models.Patient) (models.Patient, error)
 	CheckPatient(uint, []uint) (bool, string)
 	GetAllPatientsByCompanyId(int) ([]models.Patient, error)
+	GetAllPatientsByCompanyIdEmployee(int) ([]models.PatientEmployee, error)
 }
 
 type patientService struct {
@@ -50,12 +52,20 @@ func (db *patientService) GetPatientAmka(amka int) (patients []models.Patient, e
 	return patients, db.dbConnection.Where("amka = ?", amka).Find(&patients).Error
 }
 
-func (db *patientService) GetAllPatients() (patients []models.Patient, err error) {
+func (db *patientService) GetAllPatients(companyID []uint) (patients []models.Patient, err error) {
 	return patients, db.dbConnection.Preload("Company").Find(&patients).Error
+}
+
+func (db *patientService) GetAllPatientsEmployee(companyID []uint) (patients []models.PatientEmployee, err error) {
+	return patients, db.dbConnection.Raw("select firstname,lastname, email, phone from patients where company_id IN ?", companyID).Scan(&patients).Error
 }
 
 func (db *patientService) GetAllPatientsByCompanyId(id int) (patients []models.Patient, err error) {
 	return patients, db.dbConnection.Preload("Company").Where("company_id = ?", id).Find(&patients).Error
+}
+
+func (db *patientService) GetAllPatientsByCompanyIdEmployee(id int) (patients []models.PatientEmployee, err error) {
+	return patients, db.dbConnection.Raw("select firstname,lastname, email, phone from patients where company_id = ?", id).Scan(&patients).Error
 }
 
 func (db *patientService) AddPatient(patient models.Patient) (models.Patient, error) {
@@ -93,9 +103,6 @@ func (db *patientService) CheckPatient(id uint, compIDs []uint) (bool, string) {
 
 	var isOwner = false
 	for _, id := range compIDs {
-		fmt.Println("we are here: ", id)
-		fmt.Println("we are here patient: ", patient.CompanyID)
-		fmt.Println("we are here patient: ", patient.Firstname)
 
 		if patient.CompanyID == id {
 			isOwner = true

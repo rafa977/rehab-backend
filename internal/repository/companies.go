@@ -18,6 +18,7 @@ type CompanyRepository interface {
 	GetCompaniesDetailsByAccountID(uint) []models.Company
 	AddInvitationUser(models.SmartRegisterLink) (models.SmartRegisterLink, error)
 	GetInvitationToken(string) (models.SmartRegisterLink, error)
+	DeleteInvitation(uint) (bool, error)
 }
 
 type companyService struct {
@@ -80,6 +81,10 @@ func (db *companyService) AddInvitationUser(account models.SmartRegisterLink) (m
 
 func (db *companyService) GetInvitationToken(token string) (smartRegisterLink models.SmartRegisterLink, err error) {
 	return smartRegisterLink, db.dbConnection.Where("token = ?", token).Find(&smartRegisterLink).Error
+}
+
+func (db *companyService) DeleteInvitation(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.SmartRegisterLink{}, id).Error
 }
 
 // func (db *companyService) GetRelationsByCompanyID(id int) (relation []models.Relation, err error) {

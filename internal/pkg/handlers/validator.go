@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -24,7 +25,7 @@ func ValidateInputs(dataSet interface{}) (bool, map[string]string) {
 
 		for _, err := range err.(validator.ValidationErrors) {
 			field, _ := reflected.Type().FieldByName(err.StructField())
-
+			fmt.Println(field)
 			var name string
 			if name = field.Tag.Get("json"); name == "" {
 				name = strings.ToLower(err.StructField())

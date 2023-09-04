@@ -66,7 +66,7 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 		return
 	}
 
-	patientDetails.CreatedBy = userID
+	patientDetails.AddedByID = userID
 
 	patientDetails, err = s.patientDetailsRepository.AddPatientDetails(patientDetails)
 	if err != nil {

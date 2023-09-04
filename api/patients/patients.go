@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
@@ -46,6 +46,7 @@ func (s *service) Handle(route *mux.Router) {
 
 func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 	var patient models.Patient
+	// var signature models.Signature
 
 	err := json.NewDecoder(r.Body).Decode(&patient)
 	if err != nil {
@@ -53,12 +54,21 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// err = json.NewDecoder(r.Body).Decode(&signature)
+	// if err != nil {
+	// 	handlers.ProduceErrorResponse(err.Error(), w, r)
+	// 	return
+	// }
+
 	// TODO: check company ID if exists and if caller is related
 	isOwner, ownerError := handlers.ValidateCompany(patient.CompanyID, r)
 	if !isOwner {
 		handlers.ProduceErrorResponse(ownerError, w, r)
 		return
 	}
+
+	id := gcontext.Get(r, "id").(uint)
+	patient.AddedByID = id
 
 	isValid, errors := handlers.ValidateInputs(patient)
 	if !isValid {
@@ -86,31 +96,46 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
-	var patients []models.Patient
-	var response models.Response
+	roleID := gcontext.Get(r, "roleID").(uint)
 
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
+	compIDs := gcontext.Get(r, "compIDs").([]uint)
 
-	patients, err := s.patientRepository.GetAllPatients()
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
+	if roleID == 1 {
+
+		patients, err := s.patientRepository.GetAllPatients(compIDs)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		jsonRetrievedAccount, err := json.Marshal(patients)
+		if err != nil {
+			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	} else if roleID == 2 {
+		patientsEmployee, err := s.patientRepository.GetAllPatientsEmployee(compIDs)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		jsonRetrievedAccount, err := json.Marshal(patientsEmployee)
+		if err != nil {
+			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 	}
-
-	jsonRetrievedAccount, err := json.Marshal(patients)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Request) {
-	var patients []models.Patient
 
 	params := mux.Vars(r)
+	roleID := gcontext.Get(r, "roleID").(uint)
 
 	id := params["id"]
 	if id == "" {
@@ -118,20 +143,41 @@ func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	intID, err := strconv.Atoi(id)
-
-	patients, err = s.patientRepository.GetAllPatientsByCompanyId(intID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(patients)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	if roleID == 1 {
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+		patients, err := s.patientRepository.GetAllPatientsByCompanyId(intID)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		jsonRetrievedAccount, err := json.Marshal(patients)
+		if err != nil {
+			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	} else if roleID == 2 {
+		patientsEmployee, err := s.patientRepository.GetAllPatientsByCompanyIdEmployee(intID)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		jsonRetrievedAccount, err := json.Marshal(patientsEmployee)
+		if err != nil {
+			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	}
 }
 
 func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) {
@@ -201,7 +247,26 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	roleID := gcontext.Get(r, "roleID").(uint)
+
+	if roleID == 2 {
+		var patientEmployee models.PatientEmployee
+		err := json.Unmarshal(jsonRetrievedAccount, &patientEmployee)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		newJsonPatient, err := json.Marshal(patientEmployee)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(newJsonPatient), w, r)
+	} else if roleID == 1 {
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	}
 }
 
 func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {

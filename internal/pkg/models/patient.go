@@ -16,5 +16,18 @@ type Patient struct {
 	Phone          string
 	CompanyID      uint             `gorm:"uniqueIndex:idx_companyid_amka" json:"companyId,omitempty"` // createonly (disabled read from db)
 	Company        Company          `validate:"-"`
+	AddedByID      uint             // New foreign key
+	AddedBy        Account          `gorm:"foreignkey:AddedByID" validate:"-"` // AddedBy relationship
 	PatientDetails []PatientDetails `json:"-"`
+}
+
+type PatientEmployee struct {
+	Firstname string `json:"firstname" validate:"required"`
+	Lastname  string `json:"lastname" validate:"required"`
+	Email     string `json:"email" validate:"required,email,max=128"`
+	Phone     string
+	CompanyID uint    `gorm:"uniqueIndex:idx_companyid_amka" json:"-"` // createonly (disabled read from db)
+	Company   Company `json:"-" validate:"-"`
+	AddedByID uint    `json:"-"`                             // New foreign key
+	AddedBy   Account `gorm:"foreignkey:AddedByID" json:"-"` // AddedBy relationship
 }

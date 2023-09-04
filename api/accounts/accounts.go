@@ -208,6 +208,13 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Delete invitation record after registration successful
+	_, err = s.companyRepository.DeleteInvitation(retrievedSmartRegisteredLink.ID)
+	if err != nil {
+		handlers.ProduceErrorResponse("Error on deleting invitation", w, r)
+		return
+	}
+
 	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil, 2)
 	if hasError != nil {
 		handlers.ProduceErrorResponse(hasError.Error(), w, r)
@@ -244,14 +251,12 @@ func (s *service) userInvitation(w http.ResponseWriter, r *http.Request) {
 	var account models.SmartRegisterLink
 
 	roleID := gcontext.Get(r, "roleID").(uint)
-	fmt.Println(roleID)
 
 	if roleID != 1 {
 		handlers.ProduceErrorResponse("You are not authorized to do this action.", w, r)
 		return
 	}
 
-	fmt.Println(roleID)
 
 	id := gcontext.Get(r, "id").(uint)
 	if roleID != 1 {
