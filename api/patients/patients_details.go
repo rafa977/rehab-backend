@@ -51,6 +51,7 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	// TODO: check company ID if exists and if caller is related
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
 	userID := gcontext.Get(r, "id").(uint)

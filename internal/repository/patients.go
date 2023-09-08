@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"strings"
 
 	config "github.com/rehab-backend/config/database"
@@ -17,12 +16,10 @@ type PatientRepository interface {
 	GetPatientKeyword(string) ([]models.Patient, error)
 	GetPatientAmka(int) ([]models.Patient, error)
 	GetAllPatients([]uint) ([]models.Patient, error)
-	GetAllPatientsEmployee([]uint) ([]models.PatientEmployee, error)
 	AddPatient(models.Patient) (models.Patient, error)
 	UpdatePatient(models.Patient) (models.Patient, error)
 	CheckPatient(uint, []uint) (bool, string)
 	GetAllPatientsByCompanyId(int) ([]models.Patient, error)
-	GetAllPatientsByCompanyIdEmployee(int) ([]models.PatientEmployee, error)
 }
 
 type patientService struct {
@@ -56,16 +53,8 @@ func (db *patientService) GetAllPatients(companyID []uint) (patients []models.Pa
 	return patients, db.dbConnection.Preload("Company").Find(&patients).Error
 }
 
-func (db *patientService) GetAllPatientsEmployee(companyID []uint) (patients []models.PatientEmployee, err error) {
-	return patients, db.dbConnection.Raw("select firstname,lastname, email, phone from patients where company_id IN ?", companyID).Scan(&patients).Error
-}
-
 func (db *patientService) GetAllPatientsByCompanyId(id int) (patients []models.Patient, err error) {
 	return patients, db.dbConnection.Preload("Company").Where("company_id = ?", id).Find(&patients).Error
-}
-
-func (db *patientService) GetAllPatientsByCompanyIdEmployee(id int) (patients []models.PatientEmployee, err error) {
-	return patients, db.dbConnection.Raw("select firstname,lastname, email, phone from patients where company_id = ?", id).Scan(&patients).Error
 }
 
 func (db *patientService) AddPatient(patient models.Patient) (models.Patient, error) {
@@ -88,7 +77,6 @@ func (db *patientService) GetPatientByIdAndCompanyID(patientId uint, companyId u
 func (db *patientService) CheckPatient(id uint, compIDs []uint) (bool, string) {
 
 	var patient models.Patient
-	fmt.Println(id)
 	var err = db.dbConnection.First(&patient, id).Error
 	if err != nil {
 		var msg string
@@ -99,7 +87,6 @@ func (db *patientService) CheckPatient(id uint, compIDs []uint) (bool, string) {
 		}
 		return false, msg
 	}
-	fmt.Println(patient.ID)
 
 	var isOwner = false
 	for _, id := range compIDs {

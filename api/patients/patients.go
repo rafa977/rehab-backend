@@ -100,34 +100,34 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 
 	compIDs := gcontext.Get(r, "compIDs").([]uint)
 
-	if roleID == 1 {
+	patients, err := s.patientRepository.GetAllPatients(compIDs)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
 
-		patients, err := s.patientRepository.GetAllPatients(compIDs)
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+		return
+	}
+
+	if roleID == 2 {
+		var patientEmployees []models.PatientEmployee
+		err := json.Unmarshal(jsonRetrievedAccount, &patientEmployees)
 		if err != nil {
 			handlers.ProduceErrorResponse(err.Error(), w, r)
 			return
 		}
 
-		jsonRetrievedAccount, err := json.Marshal(patients)
+		newJsonPatients, err := json.Marshal(patientEmployees)
 		if err != nil {
-			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			fmt.Println(err)
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
-	} else if roleID == 2 {
-		patientsEmployee, err := s.patientRepository.GetAllPatientsEmployee(compIDs)
-		if err != nil {
-			handlers.ProduceErrorResponse(err.Error(), w, r)
-			return
-		}
-
-		jsonRetrievedAccount, err := json.Marshal(patientsEmployee)
-		if err != nil {
-			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
-			return
-		}
-
+		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+	} else if roleID == 1 {
 		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 	}
 }
@@ -148,34 +148,34 @@ func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if roleID == 1 {
+	patients, err := s.patientRepository.GetAllPatientsByCompanyId(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
 
-		patients, err := s.patientRepository.GetAllPatientsByCompanyId(intID)
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+		return
+	}
+
+	if roleID == 2 {
+		var patientEmployees []models.PatientEmployee
+		err := json.Unmarshal(jsonRetrievedAccount, &patientEmployees)
 		if err != nil {
 			handlers.ProduceErrorResponse(err.Error(), w, r)
 			return
 		}
 
-		jsonRetrievedAccount, err := json.Marshal(patients)
+		newJsonPatients, err := json.Marshal(patientEmployees)
 		if err != nil {
-			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+			fmt.Println(err)
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
-	} else if roleID == 2 {
-		patientsEmployee, err := s.patientRepository.GetAllPatientsByCompanyIdEmployee(intID)
-		if err != nil {
-			handlers.ProduceErrorResponse(err.Error(), w, r)
-			return
-		}
-
-		jsonRetrievedAccount, err := json.Marshal(patientsEmployee)
-		if err != nil {
-			handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
-			return
-		}
-
+		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+	} else if roleID == 1 {
 		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 	}
 }
