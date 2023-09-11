@@ -15,6 +15,10 @@ type PatientDetailRepository interface {
 	UpdatePatientDetails(models.PatientDetails) (models.PatientDetails, error)
 
 	GetPatientDetailsByCompanyID(int) ([]models.PatientDetails, error)
+	GetPatientDetailsByPatientID(int) ([]models.PatientDetails, error)
+
+	AddPatientDetailsPermission(models.PatientDetailsPermission) (models.PatientDetailsPermission, error)
+	GetPatientDetailsPermission(int, uint) (models.PatientDetailsPermission, error)
 }
 
 type patientDetailsService struct {
@@ -39,6 +43,10 @@ func (db *patientService) GetPatientDetailsByIdAndCompanyID(patientDetailsId int
 
 func (db *patientService) GetPatientDetailsByCompanyID(companyId int) (patientDetails []models.PatientDetails, err error) {
 	return patientDetails, db.dbConnection.Preload("Patient").Where("company_id = ? ", companyId).Find(&patientDetails).Error
+}
+
+func (db *patientService) GetPatientDetailsByPatientID(patientId int) (patientDetails []models.PatientDetails, err error) {
+	return patientDetails, db.dbConnection.Where("patient_id = ? ", patientId).Find(&patientDetails).Error
 }
 
 func (db *patientService) GetPatientDetailsFull(id int) (patientDetails models.PatientDetails, err error) {
@@ -74,9 +82,12 @@ func (db *patientService) UpdatePatientDetails(patient models.PatientDetails) (m
 	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
 }
 
-// func (db *findStorageRepository) DeleteProduct(product model.Products) (model.Products, error) {
-// 	if err := db.connection.Preload("User").First(&product, product.ID).Error; err != nil {
-// 		return product, err
-// 	}
-// 	return product, db.connection.Preload("User").Delete(&product).Error
-// }
+///////////////////////// Patient Details Permissions ////////////////////////////////////////////////////////
+
+func (db *patientService) AddPatientDetailsPermission(patientDetailsPermission models.PatientDetailsPermission) (models.PatientDetailsPermission, error) {
+	return patientDetailsPermission, db.dbConnection.Create(&patientDetailsPermission).Error
+}
+
+func (db *patientService) GetPatientDetailsPermission(patient_details_id int, account_id uint) (patientDetailsPermission models.PatientDetailsPermission, err error) {
+	return patientDetailsPermission, db.dbConnection.Where("patient_details_id = ? AND account_id = ?", patient_details_id, account_id).Find(&patientDetailsPermission).Error
+}

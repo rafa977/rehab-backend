@@ -9,7 +9,7 @@ import (
 type MedicalTherapy struct {
 	gorm.Model
 
-	PatientDetailsID          uint
+	MedHistoryID              uint
 	MedicalTherapyTitle       string `json:"medicalTherapyTitle" validate:"required"`
 	MedicalTherapyDescription string `json:"medicalTherapyDescription" `
 	FromDate                  string `json:"fromDate" `

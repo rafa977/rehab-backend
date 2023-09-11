@@ -4,10 +4,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type Therapy struct {
+type TherapyHistory struct {
 	gorm.Model
 
-	MedHistoryID       uint
+	PatientID          uint
 	TherapyTitle       string `json:"therapyTitle" validate:"required"`
 	TherapyDescription string `json:"therapyDescription"`
 	Diagnosis          string `json:"diagnosis"`

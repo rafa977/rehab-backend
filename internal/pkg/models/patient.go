@@ -14,11 +14,13 @@ type Patient struct {
 	Birthdate      CustomDate `gorm:"embedded" json:"birthdate" validate:"required"`
 	Job            string     `json:"phone"`
 	Phone          string
+	RecommendedBy  string
 	CompanyID      uint             `gorm:"uniqueIndex:idx_companyid_amka" json:"companyId,omitempty"` // createonly (disabled read from db)
 	Company        Company          `validate:"-"`
 	AddedByID      uint             // New foreign key
 	AddedBy        Account          `gorm:"foreignkey:AddedByID" validate:"-"` // AddedBy relationship
 	PatientDetails []PatientDetails `json:"-"`
+	TherapyHistory []TherapyHistory
 }
 
 type PatientEmployee struct {

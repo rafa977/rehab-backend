@@ -4,13 +4,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type PatientDetailsPermission struct {
+type PatientPermission struct {
 	gorm.Model
 	AccountID        uint
 	Account          Account
 	FromDate         string `json:"from_date"`
 	ToDate           string `json:"to_date"`
 	Access           bool
-	PatientDetailsID uint
-	PatientDetails   PatientDetails `json:"-"`
+	AccessToHistory  bool
+	SectionsOfAccess []string
+	PatientID        uint
+	Patient          Patient `json:"-"`
 }

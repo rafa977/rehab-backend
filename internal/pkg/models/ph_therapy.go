@@ -7,8 +7,6 @@ import (
 type PhTherapy struct {
 	gorm.Model
 
-	PatientDetailsID  uint
-	PatientDetails    PatientDetails
 	DysfunctionID     uint
 	Dysfunction       Dysfunction
 	Date              string
@@ -20,4 +18,5 @@ type PhTherapy struct {
 	Notes             []PhTherapyNote   `json:"phTherapyNotes,omitempty"`
 	TherapyKeys       []PhTherapyKey    `json:"phTherapyKeys,omitempty"`
 	Exercises         []PatientExercise `json:"patientExercise,omitempty"`
+	Protocols         []Protocol
 }

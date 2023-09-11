@@ -26,3 +26,21 @@ func ValidateCompany(compId uint, r *http.Request) (bool, string) {
 	return true, ""
 
 }
+
+func GetRole(r *http.Request) uint {
+
+	roleID := gcontext.Get(r, "roleID").(uint)
+	return roleID
+}
+
+func GetCompany(r *http.Request) []uint {
+
+	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	return compIDs
+}
+
+func GetAccount(r *http.Request) uint {
+
+	accountID := gcontext.Get(r, "id").(uint)
+	return accountID
+}

@@ -39,8 +39,7 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 
 	sub.HandleFunc("/patientDetailsRegistration", middleware.AuthenticationMiddleware(s.patientDetailsRegistration))
 	sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
-	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetailsFull))
-	sub.HandleFunc("/getPatientsDetailsByCompanyID", middleware.AuthenticationMiddleware(s.getPatientsDetailsByCompanyID))
+	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetails))
 }
 
 func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
@@ -53,8 +52,9 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 	}
 
 	// TODO: check company ID if exists and if caller is related
-	compIDs := gcontext.Get(r, "compIDs").([]uint)
-	userID := gcontext.Get(r, "id").(uint)
+	compIDs := handlers.GetCompany(r)
+	userID := handlers.GetAccount(r)
+
 	if len(compIDs) == 0 {
 		handlers.ProduceErrorResponse("Please register your company", w, r)
 		return
@@ -75,34 +75,31 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Registration of Details - Successful", w, r)
-}
+	// Add Access Rights to Account who creates the record
+	var permissions models.PatientDetailsPermission
+	permissions.AccountID = userID
+	permissions.PatientDetailsID = patientDetails.ID
+	permissions.Access = true
 
-func (s *detailsService) getPatientsDetailsByCompanyID(w http.ResponseWriter, r *http.Request) {
-	var patients []models.PatientDetails
-
-	patients, err := s.patientDetailsRepository.GetPatientDetailsByCompanyID(1)
+	permissions, err = s.patientDetailsRepository.AddPatientDetailsPermission(permissions)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(patients)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse("Registration of Details - Successful", w, r)
 }
 
-func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Request) {
+func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Request) {
 	var patientDetails models.PatientDetails
 	var patient models.Patient
 	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
+
+	// Current account id
+	accountId := gcontext.Get(r, "id").(uint)
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
@@ -111,6 +108,26 @@ func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Re
 	}
 
 	intID, err := strconv.Atoi(id)
+	roleID := handlers.GetRole(r)
+
+	if roleID != 1 {
+		// Check permissions
+		permissions, err := s.patientDetailsRepository.GetPatientDetailsPermission(intID, accountId)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		if permissions.ID == 0 {
+			handlers.ProduceErrorResponse("You do not have access to these data", w, r)
+			return
+		}
+
+		if permissions.Access == false {
+			handlers.ProduceErrorResponse("You do not have access to these data.", w, r)
+			return
+		}
+	}
 
 	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsFull(intID)
 	if err != nil {
@@ -144,103 +161,6 @@ func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Re
 
 	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
-
-// func (s *detailsService) getPatientFull(w http.ResponseWriter, r *http.Request) {
-// 	var patient models.Patient
-// 	var response models.Response
-
-// 	username := gcontext.Get(r, "username").(string)
-
-// 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-// 	response.Date = currentDate
-
-// 	id := r.URL.Query().Get("id")
-// 	if id == "" {
-// 		response.Status = "error"
-// 		response.Message = "Please input all required fields."
-// 		json.NewEncoder(w).Encode(response)
-
-// 		return
-// 	}
-// 	intID, err := strconv.Atoi(id)
-
-// 	patient, err = s.patientRepository.GetPatientFull(intID)
-// 	if err != nil {
-// 		response.Status = "error"
-// 		response.Message = "Unknown Username or Password"
-// 		response.Response = ""
-// 		w.WriteHeader(http.StatusOK)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// if account.Username != username {
-// 	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-// 	// 	return
-// 	// }
-
-// 	jsonRetrievedAccount, err := json.Marshal(patient)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-
-// 	response.Status = "success"
-// 	response.Message = username
-// 	response.Response = string(jsonRetrievedAccount)
-// 	json.NewEncoder(w).Encode(response)
-
-// }
-
-// func (s *detailsService) getPatientData(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-// 	var patient models.Patient
-// 	var response models.Response
-
-// 	username := gcontext.Get(r, "username").(string)
-
-// 	currentDate := time.Now().Format("2006-01-02 15:04:05")
-// 	response.Date = currentDate
-
-// 	id := r.URL.Query().Get("id")
-// 	if id == "" {
-// 		response.Status = "error"
-// 		response.Message = "Please input all required fields."
-// 		json.NewEncoder(w).Encode(response)
-
-// 		return
-// 	}
-// 	intID, err := strconv.Atoi(id)
-
-// 	patient, err = s.patientRepository.GetPatient(intID)
-// 	if err != nil {
-// 		response.Status = "error"
-// 		response.Message = "Unknown Username or Password"
-// 		response.Response = ""
-// 		w.WriteHeader(http.StatusOK)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// if account.Username != username {
-// 	// 	http.Error(w, "You are not authorized to view this data.", http.StatusBadRequest)
-// 	// 	return
-// 	// }
-
-// 	jsonRetrievedAccount, err := json.Marshal(patient)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-
-// 	response.Status = "success"
-// 	response.Message = username
-// 	response.Response = string(jsonRetrievedAccount)
-// 	json.NewEncoder(w).Encode(response)
-
-// }
 
 func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Request) {
 	var patient models.PatientDetails

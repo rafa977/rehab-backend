@@ -42,6 +42,7 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/searchPatient", middleware.AuthenticationMiddleware(s.getPatientDataKeyword))
 	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
 	sub.HandleFunc("/getAllPatientsCompanyID/{id}", middleware.AuthenticationMiddleware(s.getAllPatientsByCompanyId))
+	sub.HandleFunc("/getAllPatientsDetails", middleware.AuthenticationMiddleware(s.getAllPatientsDetails))
 }
 
 func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
@@ -96,9 +97,8 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
-	roleID := gcontext.Get(r, "roleID").(uint)
 
-	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	compIDs := handlers.GetCompany(r)
 
 	patients, err := s.patientRepository.GetAllPatients(compIDs)
 	if err != nil {
@@ -111,6 +111,46 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
 		return
 	}
+
+	roleID := handlers.GetRole(r)
+
+	if roleID == 2 {
+		var patientEmployees []models.PatientEmployee
+		err := json.Unmarshal(jsonRetrievedAccount, &patientEmployees)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		newJsonPatients, err := json.Marshal(patientEmployees)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+	} else if roleID == 1 {
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	}
+}
+
+func (s *service) getAllPatientsDetails(w http.ResponseWriter, r *http.Request) {
+
+	compIDs := handlers.GetCompany(r)
+
+	patients, err := s.patientRepository.GetAllPatientsDetails(compIDs)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(patients)
+	if err != nil {
+		handlers.ProduceErrorResponse("Error on converting retrived data.", w, r)
+		return
+	}
+
+	roleID := handlers.GetRole(r)
 
 	if roleID == 2 {
 		var patientEmployees []models.PatientEmployee
@@ -247,7 +287,7 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roleID := gcontext.Get(r, "roleID").(uint)
+	roleID := handlers.GetRole(r)
 
 	if roleID == 2 {
 		var patientEmployee models.PatientEmployee
