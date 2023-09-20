@@ -7,10 +7,8 @@ import (
 type ClinicalTests struct {
 	gorm.Model
 
-	CompanyID              uint    `json:"companyId,omitempty"`
-	Company                Company `json:"-" validate:"-"`
-	Title                  string  `gorm:"unique"`
-	ClinicalTestCategoryID uint
-	ClinicalTestCategory   ClinicalTestCategory `json:"-"`
-	Description            string
+	CompanyID   uint    `gorm:"uniqueIndex:idx_companyid_title" json:"companyId,omitempty"`
+	Company     Company `json:"-" validate:"-"`
+	Title       string  `gorm:"uniqueIndex:idx_companyid_title"`
+	Description string
 }

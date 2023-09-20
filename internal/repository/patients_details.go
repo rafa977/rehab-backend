@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	config "github.com/rehab-backend/config/database"
 	"github.com/rehab-backend/internal/pkg/models"
 	"gorm.io/gorm"
@@ -16,6 +18,9 @@ type PatientDetailRepository interface {
 
 	GetPatientDetailsByCompanyID(int) ([]models.PatientDetails, error)
 	GetPatientDetailsByPatientID(int) ([]models.PatientDetails, error)
+
+	CheckPatientByPatientDetailsID(uint, []uint) (bool, string)
+	CheckPatientByDiseaseID(uint, []uint) (bool, string)
 
 	AddPatientDetailsPermission(models.PatientDetailsPermission) (models.PatientDetailsPermission, error)
 	GetPatientDetailsPermission(int, uint) (models.PatientDetailsPermission, error)
@@ -80,6 +85,66 @@ func (db *patientService) UpdatePatientDetails(patient models.PatientDetails) (m
 		return oldPatient, err
 	}
 	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
+}
+
+func (db *patientService) CheckPatientByPatientDetailsID(id uint, compIDs []uint) (bool, string) {
+
+	var patientDetails models.PatientDetails
+
+	var err = db.dbConnection.Preload("Patient").First(&patientDetails, id).Error
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "Patient details do not exist"
+		} else {
+			msg = "Bad Request"
+		}
+		return false, msg
+	}
+
+	var isOwner = false
+	for _, id := range compIDs {
+
+		if patientDetails.Patient.CompanyID == id {
+			isOwner = true
+		}
+	}
+
+	if !isOwner {
+		return false, "Patient does not belong to your company"
+	}
+
+	return true, ""
+}
+
+func (db *patientService) CheckPatientByDiseaseID(id uint, compIDs []uint) (bool, string) {
+
+	var disease models.Disease
+
+	var err = db.dbConnection.Preload("PatientDetails").Preload("PatientDetails.Patient").First(&disease, id).Error
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "Patient details do not exist"
+		} else {
+			msg = "Bad Request"
+		}
+		return false, msg
+	}
+
+	var isOwner = false
+	for _, id := range compIDs {
+
+		if disease.PatientDetails.Patient.CompanyID == id {
+			isOwner = true
+		}
+	}
+
+	if !isOwner {
+		return false, "Patient does not belong to your company"
+	}
+
+	return true, ""
 }
 
 ///////////////////////// Patient Details Permissions ////////////////////////////////////////////////////////

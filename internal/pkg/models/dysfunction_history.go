@@ -4,10 +4,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type DysfunctionHistory struct {
+type DiseaseHistory struct {
 	gorm.Model
 
-	DysfunctionID uint
-	Dysfunction   Dysfunction
-	Note          string
+	DiseaseID uint
+	Disease   Disease
+	Note      string
 }

@@ -7,8 +7,8 @@ import (
 type PhTherapy struct {
 	gorm.Model
 
-	DysfunctionID     uint
-	Dysfunction       Dysfunction
+	DiseaseID         uint
+	Disease           Disease
 	Date              string
 	EmployeeID        uint
 	AccountEmployee   Account `gorm:"foreignKey:EmployeeID"`

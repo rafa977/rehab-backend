@@ -15,32 +15,32 @@ import (
 	"github.com/rehab-backend/internal/repository"
 )
 
-type clTestDysService struct {
-	clinicalRepository repository.ClTestDysRepository
+type clTestDisService struct {
+	clinicalRepository repository.ClTestDisRepository
 }
 
-func NewClTestDysService() *clTestDysService {
-	return &clTestDysService{
-		clinicalRepository: repository.NewClTestDysService(),
+func NewClTestDisService() *clTestDisService {
+	return &clTestDisService{
+		clinicalRepository: repository.NewClTestDisService(),
 	}
 }
 
-func (s *clTestDysService) RegisterHandlers(route *mux.Router) {
+func (s *clTestDisService) RegisterHandlers(route *mux.Router) {
 	s.Handle(route)
 }
 
-func (s *clTestDysService) Handle(route *mux.Router) {
-	sub := route.PathPrefix("/clinicalTestDysfunction").Subrouter()
+func (s *clTestDisService) Handle(route *mux.Router) {
+	sub := route.PathPrefix("/clinicalTestDisfunction").Subrouter()
 
-	sub.HandleFunc("/getClTestDys", middleware.AuthenticationMiddleware(s.getClTestDys))
-	sub.HandleFunc("/getClTestDysByDysID", middleware.AuthenticationMiddleware(s.getClTestDysByDysfunctionID))
-	sub.HandleFunc("/deleteClTestDys", middleware.AuthenticationMiddleware(s.deleteClTestDys))
-	sub.HandleFunc("/addClTestDys", middleware.AuthenticationMiddleware(s.addClTestDys))
-	sub.HandleFunc("/updateClTestDys", middleware.AuthenticationMiddleware(s.updateClTestDys))
+	sub.HandleFunc("/getClTestDis", middleware.AuthenticationMiddleware(s.getClTestDis))
+	sub.HandleFunc("/getClTestDisByDisID", middleware.AuthenticationMiddleware(s.getClTestDisByDiseaseID))
+	sub.HandleFunc("/deleteClTestDis", middleware.AuthenticationMiddleware(s.deleteClTestDis))
+	sub.HandleFunc("/addClTestDis", middleware.AuthenticationMiddleware(s.addClTestDis))
+	sub.HandleFunc("/updateClTestDis", middleware.AuthenticationMiddleware(s.updateClTestDis))
 }
 
-func (s *clTestDysService) addClTestDys(w http.ResponseWriter, r *http.Request) {
-	var clinicalTest models.ClinicalTestDysfunction
+func (s *clTestDisService) addClTestDis(w http.ResponseWriter, r *http.Request) {
+	var clinicalTest models.ClinicalTestDisease
 
 	err := json.NewDecoder(r.Body).Decode(&clinicalTest)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *clTestDysService) addClTestDys(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	compIDs := handlers.GetCompany(r)
 
 	// TODO: check company ID if exists and if caller is related
 	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckCompany(compIDs, clinicalTest)
@@ -65,7 +65,7 @@ func (s *clTestDysService) addClTestDys(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	clinicalTest, err = s.clinicalRepository.AddClTestDys(clinicalTest)
+	clinicalTest, err = s.clinicalRepository.AddClTestDis(clinicalTest)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
@@ -73,8 +73,8 @@ func (s *clTestDysService) addClTestDys(w http.ResponseWriter, r *http.Request) 
 	handlers.ProduceSuccessResponse("Clinical Test Registration - Successful", w, r)
 }
 
-func (s *clTestDysService) getClTestDysByDysfunctionID(w http.ResponseWriter, r *http.Request) {
-	var clinicalTest []models.ClinicalTestDysfunction
+func (s *clTestDisService) getClTestDisByDiseaseID(w http.ResponseWriter, r *http.Request) {
+	var clinicalTest []models.ClinicalTestDisease
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
@@ -82,17 +82,17 @@ func (s *clTestDysService) getClTestDysByDysfunctionID(w http.ResponseWriter, r 
 		return
 	}
 
-	compIDs := gcontext.Get(r, "compIDs").([]uint)
+	compIDs := handlers.GetCompany(r)
 	intID, err := strconv.Atoi(id)
 
 	// TODO: check company ID if exists and if caller is related
-	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckDysfunctionCompanyClinical(compIDs, intID)
+	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckDiseaseCompanyClinical(compIDs, intID)
 	if !validCompanyID {
 		handlers.ProduceErrorResponse(validCompanyIDError, w, r)
 		return
 	}
 
-	clinicalTest, err = s.clinicalRepository.GetClTestDysByDysID(intID)
+	clinicalTest, err = s.clinicalRepository.GetClTestDisByDisID(intID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
@@ -107,8 +107,8 @@ func (s *clTestDysService) getClTestDysByDysfunctionID(w http.ResponseWriter, r 
 	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
 }
 
-func (s *clTestDysService) updateClTestDys(w http.ResponseWriter, r *http.Request) {
-	var clinicalTest models.ClinicalTestDysfunction
+func (s *clTestDisService) updateClTestDis(w http.ResponseWriter, r *http.Request) {
+	var clinicalTest models.ClinicalTestDisease
 	var response models.Response
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
@@ -126,7 +126,7 @@ func (s *clTestDysService) updateClTestDys(w http.ResponseWriter, r *http.Reques
 	// 	}
 	// }
 
-	clinicalTest, err = s.clinicalRepository.UpdateClTestDys(clinicalTest)
+	clinicalTest, err = s.clinicalRepository.UpdateClTestDis(clinicalTest)
 	if err != nil {
 		var msg string
 		// if strings.Contains(err.Error(), "users_company_email_key") {
@@ -145,8 +145,8 @@ func (s *clTestDysService) updateClTestDys(w http.ResponseWriter, r *http.Reques
 	fmt.Fprintf(w, "Therapy Update - Successful")
 }
 
-func (s *clTestDysService) getClTestDys(w http.ResponseWriter, r *http.Request) {
-	var clinicalTest models.ClinicalTestDysfunction
+func (s *clTestDisService) getClTestDis(w http.ResponseWriter, r *http.Request) {
+	var clinicalTest models.ClinicalTestDisease
 	var response models.Response
 
 	username := gcontext.Get(r, "username").(string)
@@ -164,7 +164,7 @@ func (s *clTestDysService) getClTestDys(w http.ResponseWriter, r *http.Request) 
 
 	intID, err := strconv.Atoi(id)
 
-	clinicalTest, err = s.clinicalRepository.GetClTestDys(intID)
+	clinicalTest, err = s.clinicalRepository.GetClTestDis(intID)
 	if err != nil {
 		response.Status = "error"
 		response.Message = "Unknown Username or Password"
@@ -186,7 +186,7 @@ func (s *clTestDysService) getClTestDys(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(response)
 }
 
-func (s *clTestDysService) deleteClTestDys(w http.ResponseWriter, r *http.Request) {
+func (s *clTestDisService) deleteClTestDis(w http.ResponseWriter, r *http.Request) {
 	var response models.Response
 
 	username := gcontext.Get(r, "username").(string)
@@ -204,7 +204,7 @@ func (s *clTestDysService) deleteClTestDys(w http.ResponseWriter, r *http.Reques
 
 	intID, err := strconv.Atoi(id)
 
-	_, err = s.clinicalRepository.DeleteClTestDys(intID)
+	_, err = s.clinicalRepository.DeleteClTestDis(intID)
 	if err != nil {
 		response.Status = "error"
 		response.Message = "Unknown Username or Password"

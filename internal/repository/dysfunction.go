@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"strings"
-
 	config "github.com/rehab-backend/config/database"
 	"github.com/rehab-backend/internal/pkg/models"
 	"gorm.io/gorm"
@@ -17,7 +15,7 @@ type DysfunctionRepository interface {
 	UpdateDysfunction(models.Dysfunction) (models.Dysfunction, error)
 	CheckPatientDetails(uint, uint) (bool, string)
 	CheckPatientDetailsOwning(int, []uint) (bool, string)
-	CheckDysfunctionCompany([]uint, int) (bool, string)
+	// CheckDysfunctionCompany([]uint, int) (bool, string)
 }
 
 type dysfunctionService struct {
@@ -54,83 +52,83 @@ func (db *dysfunctionService) DeleteDysfunction(id int) (bool, error) {
 	return true, db.dbConnection.Delete(&models.Dysfunction{}, id).Error
 }
 
-// function to check if the user is under the same company where the dysfunction/category is registered
-func (db *dysfunctionService) CheckDysfunctionCompany(compIDs []uint, dysfunctionID int) (bool, string) {
+// // function to check if the user is under the same company where the dysfunction/category is registered
+// func (db *dysfunctionService) CheckDysfunctionCompany(compIDs []uint, dysfunctionID int) (bool, string) {
 
-	// get dysfunction company ID
-	var dysfunction models.Dysfunction
-	err := db.dbConnection.First(&dysfunction, dysfunctionID).Error
-	if err != nil {
-		var msg string
-		if strings.Contains(err.Error(), "record not found") {
-			msg = "Dysfunction does not exist"
-		} else {
-			msg = "Bad Request"
-		}
-		return false, msg
-	}
+// 	// get dysfunction company ID
+// 	var dysfunction models.Dysfunction
+// 	err := db.dbConnection.First(&dysfunction, dysfunctionID).Error
+// 	if err != nil {
+// 		var msg string
+// 		if strings.Contains(err.Error(), "record not found") {
+// 			msg = "Dysfunction does not exist"
+// 		} else {
+// 			msg = "Bad Request"
+// 		}
+// 		return false, msg
+// 	}
 
-	var isOwnerTest = false
-	for _, id := range compIDs {
-		if dysfunction.CompanyID == id {
-			isOwnerTest = true
-		}
-	}
+// 	var isOwnerTest = false
+// 	for _, id := range compIDs {
+// 		if dysfunction.CompanyID == id {
+// 			isOwnerTest = true
+// 		}
+// 	}
 
-	if !isOwnerTest {
-		return false, "Account does not belong to the same company"
-	}
+// 	if !isOwnerTest {
+// 		return false, "Account does not belong to the same company"
+// 	}
 
-	return true, ""
-}
+// 	return true, ""
+// }
 
-func (db *dysfunctionService) CheckPatientDetails(id uint, compID uint) (bool, string) {
+// func (db *dysfunctionService) CheckPatientDetails(id uint, compID uint) (bool, string) {
 
-	var patient models.PatientDetails
+// 	var patient models.PatientDetails
 
-	var err = db.dbConnection.Preload("Patient").First(&patient, id).Error
-	if err != nil {
-		var msg string
-		if strings.Contains(err.Error(), "record not found") {
-			msg = "You are not authorized to access these data."
-		} else {
-			msg = "Bad Request"
-		}
-		return false, msg
-	}
+// 	var err = db.dbConnection.Preload("Patient").First(&patient, id).Error
+// 	if err != nil {
+// 		var msg string
+// 		if strings.Contains(err.Error(), "record not found") {
+// 			msg = "You are not authorized to access these data."
+// 		} else {
+// 			msg = "Bad Request"
+// 		}
+// 		return false, msg
+// 	}
 
-	if patient.Patient.CompanyID != compID {
-		return false, "Patient does not belong to your company"
-	}
+// 	if patient.Patient.CompanyID != compID {
+// 		return false, "Patient does not belong to your company"
+// 	}
 
-	return true, ""
-}
+// 	return true, ""
+// }
 
-func (db *dysfunctionService) CheckPatientDetailsOwning(id int, compIDs []uint) (bool, string) {
+// func (db *dysfunctionService) CheckPatientDetailsOwning(id int, compIDs []uint) (bool, string) {
 
-	var patient models.PatientDetails
+// 	var patient models.PatientDetails
 
-	var err = db.dbConnection.Preload("Patient").First(&patient, id).Error
-	if err != nil {
-		var msg string
-		if strings.Contains(err.Error(), "record not found") {
-			msg = "You are not authorized to access these data"
-		} else {
-			msg = "Bad Request"
-		}
-		return false, msg
-	}
+// 	var err = db.dbConnection.Preload("Patient").First(&patient, id).Error
+// 	if err != nil {
+// 		var msg string
+// 		if strings.Contains(err.Error(), "record not found") {
+// 			msg = "You are not authorized to access these data"
+// 		} else {
+// 			msg = "Bad Request"
+// 		}
+// 		return false, msg
+// 	}
 
-	var isOwnerTest = false
-	for _, id := range compIDs {
-		if patient.Patient.CompanyID == id {
-			isOwnerTest = true
-		}
-	}
+// 	var isOwnerTest = false
+// 	for _, id := range compIDs {
+// 		if patient.Patient.CompanyID == id {
+// 			isOwnerTest = true
+// 		}
+// 	}
 
-	if !isOwnerTest {
-		return false, "Patient does not belong to your company"
-	}
+// 	if !isOwnerTest {
+// 		return false, "Patient does not belong to your company"
+// 	}
 
-	return true, ""
-}
+// 	return true, ""
+// }

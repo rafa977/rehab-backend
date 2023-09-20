@@ -733,16 +733,16 @@ func (s *service) addClinicalTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category, err := s.generalRepository.GetClinicalTestCategory(int(clinical.ClinicalTestCategoryID))
-	if err != nil {
-		handlers.ProduceErrorResponse("Record not found", w, r)
-		return
-	}
+	// category, err := s.generalRepository.GetClinicalTestCategory(int(clinical.ClinicalTestCategoryID))
+	// if err != nil {
+	// 	handlers.ProduceErrorResponse("Record not found", w, r)
+	// 	return
+	// }
 
-	if category.CompanyID != clinical.CompanyID {
-		handlers.ProduceErrorResponse("Company does not match", w, r)
-		return
-	}
+	// if category.CompanyID != clinical.CompanyID {
+	// 	handlers.ProduceErrorResponse("Company does not match", w, r)
+	// 	return
+	// }
 
 	clinical, err = s.generalRepository.AddClinicalTest(clinical)
 	if err != nil {

@@ -40,6 +40,9 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 	sub.HandleFunc("/patientDetailsRegistration", middleware.AuthenticationMiddleware(s.patientDetailsRegistration))
 	sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
 	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetails))
+
+	//TODO:
+	//Give access to a specific account for patient details
 }
 
 func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +71,7 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 	}
 
 	patientDetails.AddedByID = userID
+	patientDetails.LastUpdatedByID = userID
 
 	patientDetails, err = s.patientDetailsRepository.AddPatientDetails(patientDetails)
 	if err != nil {
@@ -164,7 +168,6 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 
 func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Request) {
 	var patient models.PatientDetails
-	var response models.Response
 
 	err := json.NewDecoder(r.Body).Decode(&patient)
 	if err != nil {
@@ -182,19 +185,16 @@ func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Req
 
 	patient, err = s.patientDetailsRepository.UpdatePatientDetails(patient)
 	if err != nil {
-		var newerr string
+		var errMsg string
 		if strings.Contains(err.Error(), "users_company_email_key") {
-			newerr = "user already exists!"
+			errMsg = "user already exists!"
 		} else {
-			newerr = "Bad Request"
+			errMsg = "Bad Request"
 		}
-		response.Status = "error"
-		response.Message = newerr
-		response.Response = ""
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+
+		handlers.ProduceErrorResponse(errMsg, w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "Registration of Account - Successful")
+	handlers.ProduceSuccessResponse("Update of Patient Details - Successful", w, r)
 }

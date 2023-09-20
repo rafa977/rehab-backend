@@ -44,10 +44,10 @@ func main() {
 	generalService := general.NewService()
 	generalService.RegisterHandlers(router)
 
-	dysfunctionService := patients.NewDysfunctionService()
-	dysfunctionService.RegisterHandlers(router)
+	// dysfunctionService := patients.NewDysfunctionService()
+	// dysfunctionService.RegisterHandlers(router)
 
-	clTestDysService := patients.NewClTestDysService()
+	clTestDysService := patients.NewClTestDisService()
 	clTestDysService.RegisterHandlers(router)
 
 	handlers.ListenRoute(router)

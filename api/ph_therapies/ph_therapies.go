@@ -1,16 +1,11 @@
 package ph_therapies
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/rehab-backend/internal/middleware"
 	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
 	"github.com/rehab-backend/internal/repository"
 )
 
@@ -22,8 +17,8 @@ type phTherapyService struct {
 func NewPhTherapiesService() *phTherapyService {
 
 	return &phTherapyService{
-		phTherapyRepository:      repository.NewPhTherapyService(),
-		patientDetailsRepository: repository.NewPatientDetailsService(),
+		phTherapyRepository: repository.NewPhTherapyService(),
+		// patientDetailsRepository: repository.NewPatientDetailsService(),
 	}
 }
 
@@ -43,90 +38,90 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 }
 
 func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) {
-	var phTherapy models.PhTherapy
-	var dysfunction models.Dysfunction
-	var isOwner = false
+	// var phTherapy models.PhTherapy
+	// var disease models.Disease
+	// var isOwner = false
 
-	err := json.NewDecoder(r.Body).Decode(&phTherapy)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// err := json.NewDecoder(r.Body).Decode(&phTherapy)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
-	phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
-	if dysfunction.CompanyID > 0 {
-		// TODO: check company ID if exists and if caller is related
-		compIDs := gcontext.Get(r, "compIDs").([]uint)
+	// phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
+	// if disease.CompanyID > 0 {
+	// 	// TODO: check company ID if exists and if caller is related
+	// 	compIDs := handlers.GetCompany(r)
 
-		for _, v := range compIDs {
-			if v == dysfunction.CompanyID {
-				isOwner = true
-			}
-		}
-	}
-	if !isOwner {
-		handlers.ProduceErrorResponse("You do not have permissions to access these data", w, r)
-		return
-	}
+	// 	for _, v := range compIDs {
+	// 		if v == dysfunction.CompanyID {
+	// 			isOwner = true
+	// 		}
+	// 	}
+	// }
+	// if !isOwner {
+	// 	handlers.ProduceErrorResponse("You do not have permissions to access these data", w, r)
+	// 	return
+	// }
 
-	phTherapy.PatientDetailsID = dysfunction.PatientDetailsID
+	// phTherapy.DysfunctionID = dysfunction.ID
 
-	phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
-	if err != nil {
-		handlers.ProduceErrorResponse("Something went wrong", w, r)
-		return
-	}
+	// phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
+	// if err != nil {
+	// 	handlers.ProduceErrorResponse("Something went wrong", w, r)
+	// 	return
+	// }
 	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", w, r)
 }
 
 func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) {
-	var phTherapy models.PhTherapy
+	// var phTherapy models.PhTherapy
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
-		return
-	}
-	intID, err := strconv.Atoi(id)
+	// id := r.URL.Query().Get("id")
+	// if id == "" {
+	// 	handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+	// 	return
+	// }
+	// intID, err := strconv.Atoi(id)
 
-	phTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
-	}
+	// phTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
+	// if err != nil {
+	// 	handlers.ProduceErrorResponse(err.Error(), w, r)
+	// 	return
+	// }
 
-	jsonRetrievedAccount, err := json.Marshal(phTherapy)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// jsonRetrievedAccount, err := json.Marshal(phTherapy)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	// handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *phTherapyService) getPhTherapiesByCompanyID(w http.ResponseWriter, r *http.Request) {
-	var phTherapies []models.PhTherapy
+	// var phTherapies []models.PhTherapy
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
-		return
-	}
-	intID, err := strconv.Atoi(id)
+	// id := r.URL.Query().Get("id")
+	// if id == "" {
+	// 	handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+	// 	return
+	// }
+	// intID, err := strconv.Atoi(id)
 
-	phTherapies, err = s.phTherapyRepository.GetPhTherapiesByCompanyID(intID)
-	if err != nil {
-		handlers.ProduceErrorResponse(err.Error(), w, r)
-		return
-	}
+	// phTherapies, err = s.phTherapyRepository.GetPhTherapiesByCompanyID(intID)
+	// if err != nil {
+	// 	handlers.ProduceErrorResponse(err.Error(), w, r)
+	// 	return
+	// }
 
-	jsonRetrievedAccount, err := json.Marshal(phTherapies)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// jsonRetrievedAccount, err := json.Marshal(phTherapies)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	// handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 // func (s *detailsService) getPatientDetailsFull(w http.ResponseWriter, r *http.Request) {
