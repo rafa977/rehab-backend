@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -37,15 +36,16 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 
 	sub := route.PathPrefix("/patientDetails").Subrouter()
 
-	sub.HandleFunc("/patientDetailsRegistration", middleware.AuthenticationMiddleware(s.patientDetailsRegistration))
+	sub.HandleFunc("/addPatientDetails", middleware.AuthenticationMiddleware(s.addPatientDetails))
 	sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
 	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetails))
+	sub.HandleFunc("/deletePatientDetails", middleware.AuthenticationMiddleware(s.deletePatientDetails))
 
 	//TODO:
 	//Give access to a specific account for patient details
 }
 
-func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *http.Request) {
+func (s *detailsService) addPatientDetails(w http.ResponseWriter, r *http.Request) {
 	var patientDetails models.PatientDetails
 
 	err := json.NewDecoder(r.Body).Decode(&patientDetails)
@@ -97,10 +97,6 @@ func (s *detailsService) patientDetailsRegistration(w http.ResponseWriter, r *ht
 func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Request) {
 	var patientDetails models.PatientDetails
 	var patient models.Patient
-	var response models.Response
-
-	currentDate := time.Now().Format("2006-01-02 15:04:05")
-	response.Date = currentDate
 
 	// Current account id
 	accountId := gcontext.Get(r, "id").(uint)
@@ -197,4 +193,22 @@ func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Req
 	}
 
 	handlers.ProduceSuccessResponse("Update of Patient Details - Successful", w, r)
+}
+
+func (s *detailsService) deletePatientDetails(w http.ResponseWriter, r *http.Request) {
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	intID, err := strconv.Atoi(id)
+
+	_, err = s.patientDetailsRepository.DeletePatientDetails(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Patient Details Delete - Succesfull", w, r)
 }

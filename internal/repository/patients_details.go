@@ -8,13 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
-//ProductRepository --> Interface to ProductRepository
+// ProductRepository --> Interface to ProductRepository
 type PatientDetailRepository interface {
 	GetPatientDetails(int) (models.PatientDetails, error)
 	GetPatientDetailsFull(int) (models.PatientDetails, error)
 	GetPatientDetailsByIdAndCompanyID(int, int) models.PatientDetails
 	AddPatientDetails(models.PatientDetails) (models.PatientDetails, error)
 	UpdatePatientDetails(models.PatientDetails) (models.PatientDetails, error)
+	DeletePatientDetails(int) (bool, error)
 
 	GetPatientDetailsByCompanyID(int) ([]models.PatientDetails, error)
 	GetPatientDetailsByPatientID(int) ([]models.PatientDetails, error)
@@ -30,7 +31,7 @@ type patientDetailsService struct {
 	dbConnection *gorm.DB
 }
 
-//NewProductRepository --> returns new product repository
+// NewProductRepository --> returns new product repository
 func NewPatientDetailsService() *patientService {
 	dbConnection := config.ConnectDB()
 
@@ -55,7 +56,7 @@ func (db *patientService) GetPatientDetailsByPatientID(patientId int) (patientDe
 }
 
 func (db *patientService) GetPatientDetailsFull(id int) (patientDetails models.PatientDetails, err error) {
-	return patientDetails, db.dbConnection.Preload("Injuries").Preload("PersonalAllergies").Preload("DrugTreatments").Preload("DrugTreatments.Drug").Preload("Therapies").Preload("MedicalTherapies").First(&patientDetails, id).Error
+	return patientDetails, db.dbConnection.Preload("Diseases").First(&patientDetails, id).Error
 }
 
 // func (db *patientService) GetPatientFull(id int) (patient models.Patient, err error) {
@@ -74,6 +75,10 @@ func (db *patientService) GetPatientDetailsFull(id int) (patientDetails models.P
 // 	return products, db.connection.Preload("User").Where("user_id = ?", id).Find(&products).Error
 
 // }
+
+func (db *patientService) DeletePatientDetails(id int) (bool, error) {
+	return true, db.dbConnection.Delete(&models.PatientDetails{}, id).Error
+}
 
 func (db *patientService) AddPatientDetails(patient models.PatientDetails) (models.PatientDetails, error) {
 	return patient, db.dbConnection.Create(&patient).Error

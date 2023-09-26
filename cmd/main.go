@@ -44,8 +44,8 @@ func main() {
 	generalService := general.NewService()
 	generalService.RegisterHandlers(router)
 
-	// dysfunctionService := patients.NewDysfunctionService()
-	// dysfunctionService.RegisterHandlers(router)
+	diseaseService := patients.NewDiseaseService()
+	diseaseService.RegisterHandlers(router)
 
 	clTestDysService := patients.NewClTestDisService()
 	clTestDysService.RegisterHandlers(router)
