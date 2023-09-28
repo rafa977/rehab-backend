@@ -38,7 +38,9 @@ func (s *detailsService) DetailHandle(route *mux.Router) {
 
 	sub.HandleFunc("/addPatientDetails", middleware.AuthenticationMiddleware(s.addPatientDetails))
 	sub.HandleFunc("/updatePatientDetails", middleware.AuthenticationMiddleware(s.updatePatientDetails))
-	sub.HandleFunc("/getPatientDetails", middleware.AuthenticationMiddleware(s.getPatientDetails))
+	sub.HandleFunc("/getPatientDetails/{id}", middleware.AuthenticationMiddleware(s.getPatientDetails))
+	sub.HandleFunc("/getAllPatientDetailsCards/{id}", middleware.AuthenticationMiddleware(s.getAllPatientDetailsCards))
+
 	sub.HandleFunc("/deletePatientDetails", middleware.AuthenticationMiddleware(s.deletePatientDetails))
 
 	//TODO:
@@ -101,18 +103,26 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 	// Current account id
 	accountId := gcontext.Get(r, "id").(uint)
 
-	id := r.URL.Query().Get("id")
+	params := mux.Vars(r)
+
+	id := params["id"]
 	if id == "" {
 		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 
-	intID, err := strconv.Atoi(id)
+	// Convert string parameter to uint
+	patientCardID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
 	roleID := handlers.GetRole(r)
 
 	if roleID != 1 {
 		// Check permissions
-		permissions, err := s.patientDetailsRepository.GetPatientDetailsPermission(intID, accountId)
+		permissions, err := s.patientDetailsRepository.GetPatientDetailsPermission(patientCardID, accountId)
 		if err != nil {
 			handlers.ProduceErrorResponse(err.Error(), w, r)
 			return
@@ -129,7 +139,7 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsFull(intID)
+	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsFull(patientCardID)
 	if err != nil {
 		var msg string
 		if strings.Contains(err.Error(), "record not found") {
@@ -141,7 +151,83 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	patient, err = s.patientRepository.GetPatient(int(patientDetails.PatientID))
+	patient, err = s.patientRepository.GetPatient(patientDetails.PatientID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	ownsCompany, errMsg := handlers.ValidateCompany(patient.CompanyID, r)
+	if !ownsCompany {
+		handlers.ProduceErrorResponse(errMsg, w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(patientDetails)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+}
+
+func (s *detailsService) getAllPatientDetailsCards(w http.ResponseWriter, r *http.Request) {
+	var patientDetails []models.PatientDetails
+	var patient models.Patient
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	// Current account id
+	accountId := gcontext.Get(r, "id").(uint)
+
+	// Convert string parameter to uint
+	patientID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	roleID := handlers.GetRole(r)
+
+	if roleID != 1 {
+		// Check permissions
+		permissions, err := s.patientDetailsRepository.GetPatientDetailsPermission(patientID, accountId)
+		if err != nil {
+			handlers.ProduceErrorResponse(err.Error(), w, r)
+			return
+		}
+
+		if permissions.ID == 0 {
+			handlers.ProduceErrorResponse("You do not have access to these data", w, r)
+			return
+		}
+
+		if permissions.Access == false {
+			handlers.ProduceErrorResponse("You do not have access to these data.", w, r)
+			return
+		}
+	}
+
+	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsByPatientID(patientID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "You are not authorized to access these data!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	patient, err = s.patientRepository.GetPatient(patientID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return

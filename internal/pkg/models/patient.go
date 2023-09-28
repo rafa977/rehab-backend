@@ -18,9 +18,9 @@ type Patient struct {
 	CompanyID      uint             `gorm:"uniqueIndex:idx_companyid_amka" json:"companyId,omitempty"` // createonly (disabled read from db)
 	Company        Company          `validate:"-"`
 	AddedByID      uint             // New foreign key
-	AddedBy        Account          `gorm:"foreignkey:AddedByID" validate:"-"` // AddedBy relationship
+	AddedBy        Account          `gorm:"foreignkey:AddedByID" validate:"-" json:"addedBy,omitempty"` // AddedBy relationship
 	PatientDetails []PatientDetails `json:"-"`
-	TherapyHistory []TherapyHistory
+	TherapyHistory []TherapyHistory `json:"therapyHistory,omitempty"`
 }
 
 type PatientEmployee struct {

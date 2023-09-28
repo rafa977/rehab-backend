@@ -50,6 +50,8 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/updatePassword", middleware.AuthenticationMiddleware(s.updatePassword))
 	sub.HandleFunc("/login", s.login)
 	sub.HandleFunc("/getAccountById", middleware.AuthenticationMiddleware(s.getAccountById))
+	sub.HandleFunc("/getAccount", middleware.AuthenticationMiddleware(s.getAccount))
+
 	sub.HandleFunc("/getCompaniesByAccountId", middleware.AuthenticationMiddleware(s.getCompaniesByAccountId))
 	sub.HandleFunc("/deleteAccountById", deleteAccountById)
 }
@@ -190,6 +192,8 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	compArr := []uint{retrievedSmartRegisteredLink.CompanyID}
+
 	relation.AccountID = account.ID
 	relation.Companies = append(relation.Companies, retrievedCompany)
 	relation.Title = "Employee"
@@ -215,7 +219,7 @@ func (s *service) accountRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, nil, 2)
+	token, expTime, hasError := handlers.GenerateJWT(account.Username, account.ID, compArr, 2)
 	if hasError != nil {
 		handlers.ProduceErrorResponse(hasError.Error(), w, r)
 		return
@@ -256,7 +260,6 @@ func (s *service) userInvitation(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse("You are not authorized to do this action.", w, r)
 		return
 	}
-
 
 	id := gcontext.Get(r, "id").(uint)
 	if roleID != 1 {
@@ -467,6 +470,27 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func (s *service) getAccount(w http.ResponseWriter, r *http.Request) {
+
+	var retrievedAccount models.Account
+
+	username := gcontext.Get(r, "username").(string)
+
+	retrievedAccount, err := s.repository.GetAccountByUsername(username)
+	if err != nil {
+		handlers.ProduceErrorResponse("You are not authorized to access this data", w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(retrievedAccount)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
 }
 
 func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request) {

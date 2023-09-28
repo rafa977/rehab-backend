@@ -11,20 +11,20 @@ import (
 // ProductRepository --> Interface to ProductRepository
 type PatientDetailRepository interface {
 	GetPatientDetails(int) (models.PatientDetails, error)
-	GetPatientDetailsFull(int) (models.PatientDetails, error)
+	GetPatientDetailsFull(uint) (models.PatientDetails, error)
 	GetPatientDetailsByIdAndCompanyID(int, int) models.PatientDetails
 	AddPatientDetails(models.PatientDetails) (models.PatientDetails, error)
 	UpdatePatientDetails(models.PatientDetails) (models.PatientDetails, error)
 	DeletePatientDetails(int) (bool, error)
 
 	GetPatientDetailsByCompanyID(int) ([]models.PatientDetails, error)
-	GetPatientDetailsByPatientID(int) ([]models.PatientDetails, error)
+	GetPatientDetailsByPatientID(uint) ([]models.PatientDetails, error)
 
 	CheckPatientByPatientDetailsID(uint, []uint) (bool, string)
 	CheckPatientByDiseaseID(uint, []uint) (bool, string)
 
 	AddPatientDetailsPermission(models.PatientDetailsPermission) (models.PatientDetailsPermission, error)
-	GetPatientDetailsPermission(int, uint) (models.PatientDetailsPermission, error)
+	GetPatientDetailsPermission(uint, uint) (models.PatientDetailsPermission, error)
 }
 
 type patientDetailsService struct {
@@ -51,11 +51,11 @@ func (db *patientService) GetPatientDetailsByCompanyID(companyId int) (patientDe
 	return patientDetails, db.dbConnection.Preload("Patient").Where("company_id = ? ", companyId).Find(&patientDetails).Error
 }
 
-func (db *patientService) GetPatientDetailsByPatientID(patientId int) (patientDetails []models.PatientDetails, err error) {
+func (db *patientService) GetPatientDetailsByPatientID(patientId uint) (patientDetails []models.PatientDetails, err error) {
 	return patientDetails, db.dbConnection.Where("patient_id = ? ", patientId).Find(&patientDetails).Error
 }
 
-func (db *patientService) GetPatientDetailsFull(id int) (patientDetails models.PatientDetails, err error) {
+func (db *patientService) GetPatientDetailsFull(id uint) (patientDetails models.PatientDetails, err error) {
 	return patientDetails, db.dbConnection.Preload("Diseases").First(&patientDetails, id).Error
 }
 
@@ -158,6 +158,6 @@ func (db *patientService) AddPatientDetailsPermission(patientDetailsPermission m
 	return patientDetailsPermission, db.dbConnection.Create(&patientDetailsPermission).Error
 }
 
-func (db *patientService) GetPatientDetailsPermission(patient_details_id int, account_id uint) (patientDetailsPermission models.PatientDetailsPermission, err error) {
+func (db *patientService) GetPatientDetailsPermission(patient_details_id uint, account_id uint) (patientDetailsPermission models.PatientDetailsPermission, err error) {
 	return patientDetailsPermission, db.dbConnection.Where("patient_details_id = ? AND account_id = ?", patient_details_id, account_id).Find(&patientDetailsPermission).Error
 }
