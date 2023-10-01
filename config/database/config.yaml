@@ -1,6 +1,13 @@
+# postgres:
+#   host: localhost
+#   user: postgres
+#   password: yours
+#   port: 5432
+#   dbname: postgres
+# 
 postgres:
   host: localhost
   user: postgres
-  password: yours
+  password: password
   port: 5432
-  dbname: postgres
+  dbname: rehab
