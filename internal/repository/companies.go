@@ -1,12 +1,13 @@
 package repository
 
 import (
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//ProductRepository --> Interface to ProductRepository
+// ProductRepository --> Interface to ProductRepository
 type CompanyRepository interface {
 	GetCompanyByID(int) (models.Company, error)
 	UpdateCompany(models.Company) (models.Company, error)
@@ -25,7 +26,7 @@ type companyService struct {
 	dbConnection *gorm.DB
 }
 
-//NewProductRepository --> returns new product repository
+// NewProductRepository --> returns new product repository
 func NewCompanyService() *companyService {
 	dbConnection := config.ConnectDB()
 

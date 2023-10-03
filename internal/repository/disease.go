@@ -1,12 +1,13 @@
 package repository
 
 import (
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//DiseaseRepository --> Interface to DiseaseRepository
+// DiseaseRepository --> Interface to DiseaseRepository
 type DiseaseRepository interface {
 	GetDisease(int) (models.Disease, error)
 	GetAllDiseasesPatientDetailsID(int) ([]models.Disease, error)
@@ -22,7 +23,7 @@ type diseaseService struct {
 	dbConnection *gorm.DB
 }
 
-//NewDiseaseService --> returns new disease repository
+// NewDiseaseService --> returns new disease repository
 func NewDiseaseService() *diseaseService {
 	dbConnection := config.ConnectDB()
 

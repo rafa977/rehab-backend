@@ -2,13 +2,12 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/rehab-backend/api/accounts"
-	"github.com/rehab-backend/api/companies"
-	"github.com/rehab-backend/api/general"
-	"github.com/rehab-backend/api/patients"
-	"github.com/rehab-backend/api/ph_therapies"
-	"github.com/rehab-backend/internal/pkg/handlers"
+	"rehab/api/accounts"
+	"rehab/api/companies"
+	"rehab/api/general"
+	"rehab/api/patients"
+	"rehab/api/ph_therapies"
+	"rehab/internal/pkg/handlers"
 )
 
 func main() {

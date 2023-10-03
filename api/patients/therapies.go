@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"time"
 
+	"rehab/internal/middleware"
+
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type therapyService struct {

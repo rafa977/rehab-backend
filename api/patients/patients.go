@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"strings"
 
+	"rehab/internal/middleware"
+
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type service struct {
@@ -95,7 +96,7 @@ func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Registration of Account - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Account - Successful", fmt.Sprint(patient.ID), w, r)
 }
 
 func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +142,7 @@ func (s *service) updatePatient(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Update of Account - Successful", w, r)
+	handlers.ProduceSuccessResponse("Update of Account - Successful", "", w, r)
 }
 
 func (s *service) deletePatient(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +182,7 @@ func (s *service) deletePatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Delete of Patient - Successful", w, r)
+	handlers.ProduceSuccessResponse("Delete of Patient - Successful", "", w, r)
 }
 
 func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
@@ -242,9 +243,9 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(newJsonPatient), w, r)
+		handlers.ProduceSuccessResponse(string(newJsonPatient), "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 	}
 }
 
@@ -299,9 +300,9 @@ func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 	}
 }
 
@@ -337,9 +338,9 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 	}
 }
 
@@ -375,9 +376,9 @@ func (s *service) getAllPatientsDetails(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		handlers.ProduceSuccessResponse(string(newJsonPatients), w, r)
+		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 	}
 }
 
@@ -409,5 +410,5 @@ func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }

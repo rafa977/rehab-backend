@@ -1,12 +1,13 @@
 package repository
 
 import (
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//TherapyRepository --> Interface to TherapyRepository
+// TherapyRepository --> Interface to TherapyRepository
 type PhTherapyRepository interface {
 	AddPhTherapy(models.PhTherapy) (models.PhTherapy, error)
 	GetPhTherapy(int) (models.PhTherapy, error)
@@ -19,7 +20,7 @@ type phTherapyService struct {
 	dbConnection *gorm.DB
 }
 
-//NewTherapyService --> returns new therapy repository
+// NewTherapyService --> returns new therapy repository
 func NewPhTherapyService() *phTherapyService {
 	dbConnection := config.ConnectDB()
 

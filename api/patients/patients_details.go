@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"strings"
 
+	"rehab/internal/middleware"
+
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type detailsService struct {
@@ -93,7 +94,7 @@ func (s *detailsService) addPatientDetails(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Registration of Details - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Details - Successful", "", w, r)
 }
 
 func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +144,7 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		var msg string
 		if strings.Contains(err.Error(), "record not found") {
-			msg = "You are not authorized to access these data!"
+			msg = "No patient cards created"
 		} else {
 			msg = "Bad Request"
 		}
@@ -169,9 +170,10 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
+// Get all Patient Detail Cards based on Patient ID
 func (s *detailsService) getAllPatientDetailsCards(w http.ResponseWriter, r *http.Request) {
 	var patientDetails []models.PatientDetails
 	var patient models.Patient
@@ -198,32 +200,29 @@ func (s *detailsService) getAllPatientDetailsCards(w http.ResponseWriter, r *htt
 
 	if roleID != 1 {
 		// Check permissions
-		permissions, err := s.patientDetailsRepository.GetPatientDetailsPermission(patientID, accountId)
+
+		// Bring all cards that current account has access
+
+		permissions, err := s.patientDetailsRepository.GetPatientDetailsForEmployeeID(patientID, accountId)
 		if err != nil {
-			handlers.ProduceErrorResponse(err.Error(), w, r)
+			var msg string
+			if strings.Contains(err.Error(), "record not found") {
+				msg = "You are not authorized to access these data!"
+			} else {
+				msg = "Bad Request"
+			}
+			handlers.ProduceErrorResponse(msg, w, r)
 			return
 		}
 
-		if permissions.ID == 0 {
-			handlers.ProduceErrorResponse("You do not have access to these data", w, r)
+		jsonRetrievedAccount, err := json.Marshal(permissions)
+		if err != nil {
+			fmt.Println(err)
+
 			return
 		}
 
-		if permissions.Access == false {
-			handlers.ProduceErrorResponse("You do not have access to these data.", w, r)
-			return
-		}
-	}
-
-	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsByPatientID(patientID)
-	if err != nil {
-		var msg string
-		if strings.Contains(err.Error(), "record not found") {
-			msg = "You are not authorized to access these data!"
-		} else {
-			msg = "Bad Request"
-		}
-		handlers.ProduceErrorResponse(msg, w, r)
+		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 		return
 	}
 
@@ -239,13 +238,25 @@ func (s *detailsService) getAllPatientDetailsCards(w http.ResponseWriter, r *htt
 		return
 	}
 
+	patientDetails, err = s.patientDetailsRepository.GetPatientDetailsByPatientID(patientID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "You are not authorized to access these data!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
 	jsonRetrievedAccount, err := json.Marshal(patientDetails)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Request) {
@@ -278,7 +289,7 @@ func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Update of Patient Details - Successful", w, r)
+	handlers.ProduceSuccessResponse("Update of Patient Details - Successful", "", w, r)
 }
 
 func (s *detailsService) deletePatientDetails(w http.ResponseWriter, r *http.Request) {
@@ -296,5 +307,5 @@ func (s *detailsService) deletePatientDetails(w http.ResponseWriter, r *http.Req
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Patient Details Delete - Succesfull", w, r)
+	handlers.ProduceSuccessResponse("Patient Details Delete - Succesfull", "", w, r)
 }

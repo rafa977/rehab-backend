@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type diseaseService struct {
@@ -65,7 +66,7 @@ func (s *diseaseService) getDisease(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
 }
 
 func (s *diseaseService) getDiseasesPDID(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +98,7 @@ func (s *diseaseService) getDiseasesPDID(w http.ResponseWriter, r *http.Request)
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
 }
 
 func (s *diseaseService) deleteDisease(w http.ResponseWriter, r *http.Request) {
@@ -115,5 +116,5 @@ func (s *diseaseService) deleteDisease(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Disease Delete - Succesfull", w, r)
+	handlers.ProduceSuccessResponse("Disease Delete - Succesfull", "", w, r)
 }

@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 	"log"
+	"rehab/internal/pkg/models"
 
-	"github.com/rehab-backend/internal/pkg/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

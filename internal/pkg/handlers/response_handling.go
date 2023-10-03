@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rehab-backend/internal/pkg/models"
+	"rehab/internal/pkg/models"
 )
 
 func ProduceErrorResponse(msg string, w http.ResponseWriter, r *http.Request) {
@@ -22,14 +22,14 @@ func ProduceErrorResponse(msg string, w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func ProduceSuccessResponse(responseMsg string, w http.ResponseWriter, r *http.Request) {
+func ProduceSuccessResponse(responseMsg string, message string, w http.ResponseWriter, r *http.Request) {
 	var response models.Response
 
 	currentDate := time.Now().Format("2006-01-02 15:04:05")
 	response.Date = currentDate
 
 	response.Status = "success"
-	response.Message = ""
+	response.Message = message
 	response.Response = responseMsg
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

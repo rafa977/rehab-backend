@@ -3,12 +3,13 @@ package repository
 import (
 	"fmt"
 
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//GeneralRepository --> Interface to GeneralRepository
+// GeneralRepository --> Interface to GeneralRepository
 type GeneralRepository interface {
 	// Drug
 	GetDrug(int) (models.Drug, error)
@@ -50,7 +51,7 @@ type generalService struct {
 	dbConnection *gorm.DB
 }
 
-//NewGeneralRepoService --> returns new general repository
+// NewGeneralRepoService --> returns new general repository
 func NewGeneralRepoService() *generalService {
 	dbConnection := config.ConnectDB()
 

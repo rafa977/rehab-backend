@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type service struct {
@@ -84,7 +84,7 @@ func (s *service) getAllDrugs(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +111,7 @@ func (s *service) getDrug(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (s *service) deleteDrug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Drug Deleted - Successful", w, r)
+	handlers.ProduceSuccessResponse("Drug Deleted - Successful", "", w, r)
 }
 
 func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Drug Udated - Successful", w, r)
+	handlers.ProduceSuccessResponse("Drug Udated - Successful", "", w, r)
 }
 
 func (s *service) addDrug(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +195,7 @@ func (s *service) addDrug(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Drug - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Drug - Successful", "", w, r)
 }
 
 ////////////////////// ############## ALLERGIES ################# /////////////////
@@ -217,7 +217,7 @@ func (s *service) getAllAllergies(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
@@ -245,7 +245,7 @@ func (s *service) getAllergy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +266,7 @@ func (s *service) deleteAllergy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Allergy Deleted - Successful", w, r)
+	handlers.ProduceSuccessResponse("Allergy Deleted - Successful", "", w, r)
 }
 
 func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
@@ -296,7 +296,7 @@ func (s *service) updateAllergy(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Allergy Udated - Successful", w, r)
+	handlers.ProduceSuccessResponse("Allergy Udated - Successful", "", w, r)
 }
 
 func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
@@ -327,10 +327,10 @@ func (s *service) addAllergy(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Allergy - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Allergy - Successful", "", w, r)
 }
 
-////////////////////// ############## DISORDERS ################# /////////////////
+// //////////////////// ############## DISORDERS ################# /////////////////
 func (s *service) getAllDisorders(w http.ResponseWriter, r *http.Request) {
 	var disorders []models.Disorder
 
@@ -348,7 +348,7 @@ func (s *service) getAllDisorders(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getDisorder(w http.ResponseWriter, r *http.Request) {
@@ -375,7 +375,7 @@ func (s *service) getDisorder(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) deleteDisorder(w http.ResponseWriter, r *http.Request) {
@@ -396,7 +396,7 @@ func (s *service) deleteDisorder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("Record Deleted", w, r)
+	handlers.ProduceSuccessResponse("Record Deleted", "", w, r)
 }
 
 func (s *service) updateDisorder(w http.ResponseWriter, r *http.Request) {
@@ -426,7 +426,7 @@ func (s *service) updateDisorder(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Disorder Udated - Successful", w, r)
+	handlers.ProduceSuccessResponse("Disorder Udated - Successful", "", w, r)
 }
 
 func (s *service) addDisorder(w http.ResponseWriter, r *http.Request) {
@@ -457,10 +457,10 @@ func (s *service) addDisorder(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Disorder - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Disorder - Successful", "", w, r)
 }
 
-////////////////////// ############## CLINICAL TEST CATEGORIES ################# /////////////////
+// //////////////////// ############## CLINICAL TEST CATEGORIES ################# /////////////////
 func (s *service) getAllClinicalTestCategories(w http.ResponseWriter, r *http.Request) {
 	var categories []models.ClinicalTestCategory
 
@@ -478,7 +478,7 @@ func (s *service) getAllClinicalTestCategories(w http.ResponseWriter, r *http.Re
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getClinicalTestCategory(w http.ResponseWriter, r *http.Request) {
@@ -505,7 +505,7 @@ func (s *service) getClinicalTestCategory(w http.ResponseWriter, r *http.Request
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) deleteClinicalTestCategory(w http.ResponseWriter, r *http.Request) {
@@ -525,7 +525,7 @@ func (s *service) deleteClinicalTestCategory(w http.ResponseWriter, r *http.Requ
 		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Record Deleted", w, r)
+	handlers.ProduceSuccessResponse("Record Deleted", "", w, r)
 }
 
 func (s *service) updateClinicalTestCategory(w http.ResponseWriter, r *http.Request) {
@@ -555,7 +555,7 @@ func (s *service) updateClinicalTestCategory(w http.ResponseWriter, r *http.Requ
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Category Udated - Successful", w, r)
+	handlers.ProduceSuccessResponse("Category Udated - Successful", "", w, r)
 }
 
 func (s *service) addClinicalTestCategory(w http.ResponseWriter, r *http.Request) {
@@ -593,10 +593,10 @@ func (s *service) addClinicalTestCategory(w http.ResponseWriter, r *http.Request
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Category - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Category - Successful", "", w, r)
 }
 
-////////////////////// ############## CLINICAL TESTS ################# /////////////////
+// //////////////////// ############## CLINICAL TESTS ################# /////////////////
 func (s *service) getAllClinicalTests(w http.ResponseWriter, r *http.Request) {
 	var clinical []models.ClinicalTests
 
@@ -614,7 +614,7 @@ func (s *service) getAllClinicalTests(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getClinicalTest(w http.ResponseWriter, r *http.Request) {
@@ -641,7 +641,7 @@ func (s *service) getClinicalTest(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) deleteClinicalTest(w http.ResponseWriter, r *http.Request) {
@@ -668,7 +668,7 @@ func (s *service) deleteClinicalTest(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse("Something went wrong", w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Record Deleted", w, r)
+	handlers.ProduceSuccessResponse("Record Deleted", "", w, r)
 }
 
 func (s *service) updateClinicalTest(w http.ResponseWriter, r *http.Request) {
@@ -706,7 +706,7 @@ func (s *service) updateClinicalTest(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(newerr, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Category Udated - Successful", w, r)
+	handlers.ProduceSuccessResponse("Category Udated - Successful", "", w, r)
 }
 
 func (s *service) addClinicalTest(w http.ResponseWriter, r *http.Request) {
@@ -757,5 +757,5 @@ func (s *service) addClinicalTest(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Registration of Category - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Category - Successful", "", w, r)
 }

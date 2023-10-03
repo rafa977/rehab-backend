@@ -24,6 +24,7 @@ type Patient struct {
 }
 
 type PatientEmployee struct {
+	ID        uint
 	Firstname string `json:"firstname" validate:"required"`
 	Lastname  string `json:"lastname" validate:"required"`
 	Email     string `json:"email" validate:"required,email,max=128"`

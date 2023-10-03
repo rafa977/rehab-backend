@@ -2,11 +2,11 @@ package ph_therapies
 
 import (
 	"net/http"
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/repository"
 
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type phTherapyService struct {
@@ -71,7 +71,7 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 	// 	handlers.ProduceErrorResponse("Something went wrong", w, r)
 	// 	return
 	// }
-	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", w, r)
+	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", "", w, r)
 }
 
 func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) {

@@ -1,12 +1,13 @@
 package repository
 
 import (
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//DysfunctionRepository --> Interface to DysfunctionRepository
+// DysfunctionRepository --> Interface to DysfunctionRepository
 type DysfunctionRepository interface {
 	GetDysfunction(int) (models.Dysfunction, error)
 	GetAllDysfunctionsPatientDetailsID(int) ([]models.Dysfunction, error)
@@ -22,7 +23,7 @@ type dysfunctionService struct {
 	dbConnection *gorm.DB
 }
 
-//NewDysfunctionService --> returns new clinical test dysfunction repository
+// NewDysfunctionService --> returns new clinical test dysfunction repository
 func NewDysfunctionService() *dysfunctionService {
 	dbConnection := config.ConnectDB()
 

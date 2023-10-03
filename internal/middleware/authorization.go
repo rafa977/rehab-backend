@@ -3,12 +3,12 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
 	"strings"
 	"time"
 
 	"github.com/gorilla/context"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
 )
 
 func AuthenticationMiddleware(next http.HandlerFunc) http.HandlerFunc {

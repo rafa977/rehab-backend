@@ -1,0 +1,9 @@
+docker run --name redis --net rehab --detach -e ALLOW_EMPTY_PASSWORD=yes bitnami/redis:latest
+docker run --name mailer --net rehab --detach blas:latest
+docker run --name sender --net rehab --detach sender:latest
+
+
+docker build -t sender . -f ./notification_sender/Dockerfile_sender
+docker build -t <tag> <PATH of context to find> <Dockerfile> 
+
+PATH should be defined according to the current directory

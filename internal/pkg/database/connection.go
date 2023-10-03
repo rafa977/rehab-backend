@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	config "github.com/rehab-backend/config/database"
+	config "rehab/config/database"
 )
 
 func Connection() {

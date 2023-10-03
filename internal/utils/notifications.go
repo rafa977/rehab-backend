@@ -10,8 +10,9 @@ import (
 	//"github.com/gin-gonic/gin"
 	//"github.com/go-redis/redis"
 
+	"rehab/internal/pkg/models"
+
 	"github.com/go-redis/redis/v8"
-	"github.com/rehab-backend/internal/pkg/models"
 )
 
 type RedisHandler interface {

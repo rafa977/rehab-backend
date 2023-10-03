@@ -9,7 +9,7 @@ type PatientDetails struct {
 
 	PatientID       uint
 	Patient         Patient   `json:"patient" validate:"-"`
-	Title           string    // Patient details card title
+	Title           string    `json:",omitempty"`
 	Description     string    // Description
 	Note            string    // Note
 	AddedByID       uint      // New foreign key

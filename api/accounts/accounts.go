@@ -4,6 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
+	"rehab/internal/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -11,10 +17,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -296,7 +298,9 @@ func (s *service) userInvitation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse("User has been invited", w, r)
+	utils.NewredisRepository().Add_mail_to_Redis_queue(account.Email, os.Getenv("CLIENT_ORIGIN")+"/join/"+newAccount.Token, "Your account verification code", "Registration")
+
+	handlers.ProduceSuccessResponse("User has been invited", "", w, r)
 }
 
 func (s *service) updatePassword(w http.ResponseWriter, r *http.Request) {
@@ -345,7 +349,7 @@ func (s *service) updatePassword(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Update of Password - Successful", w, r)
+	handlers.ProduceSuccessResponse("Update of Password - Successful", "", w, r)
 }
 
 func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {
@@ -388,7 +392,7 @@ func (s *service) updateAccount(w http.ResponseWriter, r *http.Request) {
 		handlers.ProduceErrorResponse(msg, w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Update of Account - Successful", w, r)
+	handlers.ProduceSuccessResponse("Update of Account - Successful", "", w, r)
 }
 
 func (s *service) login(w http.ResponseWriter, r *http.Request) {
@@ -490,7 +494,7 @@ func (s *service) getAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request) {
@@ -506,7 +510,7 @@ func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
@@ -544,7 +548,7 @@ func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func deleteAccountById(w http.ResponseWriter, r *http.Request) {

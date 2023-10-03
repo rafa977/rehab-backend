@@ -1,12 +1,13 @@
 package repository
 
 import (
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//ProductRepository --> Interface to ProductRepository
+// ProductRepository --> Interface to ProductRepository
 type AccountsRepository interface {
 	GetAccountByID(uint) (models.Account, error)
 	GetAccountByIDWithPassword(uint) (models.Account, error)
@@ -22,7 +23,7 @@ type accountService struct {
 	dbConnection *gorm.DB
 }
 
-//NewProductRepository --> returns new product repository
+// NewProductRepository --> returns new product repository
 func NewAccountService() *accountService {
 	dbConnection := config.ConnectDB()
 

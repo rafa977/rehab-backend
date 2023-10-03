@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"time"
 
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 type clTestDisService struct {
@@ -70,7 +71,7 @@ func (s *clTestDisService) addClTestDis(w http.ResponseWriter, r *http.Request) 
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
 	}
-	handlers.ProduceSuccessResponse("Clinical Test Registration - Successful", w, r)
+	handlers.ProduceSuccessResponse("Clinical Test Registration - Successful", "", w, r)
 }
 
 func (s *clTestDisService) getClTestDisByDiseaseID(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +105,7 @@ func (s *clTestDisService) getClTestDisByDiseaseID(w http.ResponseWriter, r *htt
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
 }
 
 func (s *clTestDisService) updateClTestDis(w http.ResponseWriter, r *http.Request) {

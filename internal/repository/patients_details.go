@@ -3,8 +3,9 @@ package repository
 import (
 	"strings"
 
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,7 @@ type PatientDetailRepository interface {
 
 	GetPatientDetailsByCompanyID(int) ([]models.PatientDetails, error)
 	GetPatientDetailsByPatientID(uint) ([]models.PatientDetails, error)
+	GetPatientDetailsForEmployeeID(uint, uint) ([]models.PatientDetailsPermission, error)
 
 	CheckPatientByPatientDetailsID(uint, []uint) (bool, string)
 	CheckPatientByDiseaseID(uint, []uint) (bool, string)
@@ -59,22 +61,13 @@ func (db *patientService) GetPatientDetailsFull(id uint) (patientDetails models.
 	return patientDetails, db.dbConnection.Preload("Diseases").First(&patientDetails, id).Error
 }
 
-// func (db *patientService) GetPatientFull(id int) (patient models.Patient, err error) {
-// 	return patient, db.dbConnection.Preload("PersnoalAllergies").Preload("DrugTreatments").Preload("Therapies").Preload("MedicalTherapies").First(&patient, id).Error
-// }
-
-// func (db *patientService) GetPatientWithTherapies(id int) (patient models.Patient, err error) {
-// 	return patient, db.dbConnection.Preload("Therapies").First(&patient, id).Error
-// }
-
-// func (db *patientService) GetAllPatients() (patients []models.Patient, err error) {
-// 	return patients, db.dbConnection.Find(&patients).Error
-// }
-
-// func (db *findStorageRepository) GetCurrentusersProducts(id int) (products []model.Products, err error) {
-// 	return products, db.connection.Preload("User").Where("user_id = ?", id).Find(&products).Error
-
-// }
+func (db *patientService) GetPatientDetailsForEmployeeID(patientID uint, account_id uint) (patientDetailsPermission []models.PatientDetailsPermission, err error) {
+	return patientDetailsPermission, db.dbConnection.Preload("PatientDetails").
+		Omit("PatientDetails.patient").
+		Joins("JOIN patient_details ON patient_details_permissions.patient_details_id = patient_details.id").
+		Where("patient_details_permissions.account_id = ? AND patient_details.patient_id = ?", account_id, patientID).
+		Find(&patientDetailsPermission).Error
+}
 
 func (db *patientService) DeletePatientDetails(id int) (bool, error) {
 	return true, db.dbConnection.Delete(&models.PatientDetails{}, id).Error

@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"rehab/internal/pkg/models"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/k3a/html2text"
@@ -25,18 +27,19 @@ func init() {
 }
 
 func receive(channel string, template string) *redis.Message {
+
 	client := redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDIS_URL"),      // Replace with your Redis server address
 		Password: os.Getenv("REDIS_PASSWORD"), // Set if you have a password for your Redis server
 		DB:       0,                           // Select the appropriate Redis database
 	})
-
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		fmt.Println("Failed to connect to Redis:", err)
 
 	}
-	var data model.EmailData
+
+	var data models.Email
 	pubsub := client.Subscribe(context.Background(), channel)
 	_, err = pubsub.Receive(context.Background())
 	if err != nil {
@@ -60,6 +63,7 @@ func receive(channel string, template string) *redis.Message {
 
 	}
 }
+
 func ParseTemplateDir(dir string) (*template.Template, error) {
 	var paths []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -78,7 +82,7 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	return template.ParseFiles(paths...)
 }
 
-func SendEmail(mail_address string, data *model.EmailData, templateName string) error {
+func SendEmail(mail_address string, data *models.Email, templateName string) error {
 
 	from := os.Getenv("EMAIL_FROM")
 	smtpPass := os.Getenv("SMTP_PASS")
@@ -114,8 +118,9 @@ func SendEmail(mail_address string, data *model.EmailData, templateName string) 
 }
 
 func main() {
-	go receive("Accepted_Bids", "Validateorder.html")
-	go receive("Registration", "verificationCode.html")
-	go receive("User_reset_password", "resetPassword.html")
+	// fmt.Println("asd")
+	// go receive("Accepted_Bids", "Validateorder.html")
+	go receive("registration", "verificationCode.html")
+	// go receive("User_reset_password", "resetPassword.html")
 	select {}
 }

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"rehab/internal/middleware"
+	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
+	"rehab/internal/repository"
 	"strconv"
 	"strings"
 	"time"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/rehab-backend/internal/middleware"
-	"github.com/rehab-backend/internal/pkg/handlers"
-	"github.com/rehab-backend/internal/pkg/models"
-	"github.com/rehab-backend/internal/repository"
 )
 
 const ADMIN = "admin"
@@ -124,7 +124,7 @@ func (s *service) companyRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(token, w, r)
+	handlers.ProduceSuccessResponse(token, "", w, r)
 }
 
 func (s *service) addRelation(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +188,7 @@ func (s *service) getCompanyData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedCompany), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedCompany), "", w, r)
 	return
 }
 
@@ -204,7 +204,7 @@ func (s *service) getCompaniesDetailsDataByAccountID(w http.ResponseWriter, r *h
 		return
 	}
 
-	handlers.ProduceSuccessResponse(string(jsonRetrieved), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
 }
 
 func (s *service) getRelationIDsByAccountID(w http.ResponseWriter, r *http.Request) {

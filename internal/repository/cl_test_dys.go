@@ -3,12 +3,13 @@ package repository
 import (
 	"strings"
 
-	config "github.com/rehab-backend/config/database"
-	"github.com/rehab-backend/internal/pkg/models"
+	config "rehab/config/database"
+	"rehab/internal/pkg/models"
+
 	"gorm.io/gorm"
 )
 
-//ClTestDysRepository --> Interface to ClTestDysRepository
+// ClTestDysRepository --> Interface to ClTestDysRepository
 type ClTestDisRepository interface {
 	GetClTestDis(int) (models.ClinicalTestDisease, error)
 	GetClTestDisByDisID(int) ([]models.ClinicalTestDisease, error)
@@ -23,7 +24,7 @@ type clTestDisService struct {
 	dbConnection *gorm.DB
 }
 
-//NewClTestDysService --> returns new clinical test dysfunction repository
+// NewClTestDysService --> returns new clinical test dysfunction repository
 func NewClTestDisService() *clTestDisService {
 	dbConnection := config.ConnectDB()
 
