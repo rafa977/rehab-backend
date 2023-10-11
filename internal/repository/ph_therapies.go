@@ -12,6 +12,9 @@ type PhTherapyRepository interface {
 	AddPhTherapy(models.PhTherapy) (models.PhTherapy, error)
 	GetPhTherapy(int) (models.PhTherapy, error)
 	GetPhTherapiesByCompanyID(int) ([]models.PhTherapy, error)
+	GetAllTherapiesByDiseaseID(int) ([]models.PhTherapy, error)
+	GetNumberOfTherapiesByDiseaseID(int) (int64, error)
+
 	// DeletePhTherapy(int) (bool, error)
 	// UpdatePhTherapy(models.Therapy) (models.Therapy, error)
 }
@@ -32,11 +35,26 @@ func (db *phTherapyService) AddPhTherapy(phTherapy models.PhTherapy) (models.PhT
 }
 
 func (db *phTherapyService) GetPhTherapy(id int) (therapy models.PhTherapy, err error) {
-	return therapy, db.dbConnection.Preload("Patient").First(&therapy, id).Error
+	return therapy, db.dbConnection.Preload("AccountSuperVisor", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
+		Preload("AccountEmployee", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
+		Preload("Protocols").
+		Preload("TherapyKeys").
+		Preload("Exercises").First(&therapy, id).Error
 }
 
 func (db *phTherapyService) GetPhTherapiesByCompanyID(companyId int) (therapies []models.PhTherapy, err error) {
 	return therapies, db.dbConnection.Where("company_id = ?", companyId).Find(&therapies).Error
+}
+
+func (db *phTherapyService) GetAllTherapiesByDiseaseID(diseaseID int) (therapies []models.PhTherapy, err error) {
+	return therapies, db.dbConnection.Order("created_at desc").
+		Preload("AccountSuperVisor", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
+		Preload("AccountEmployee", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
+		Where("disease_id = ?", diseaseID).Find(&therapies).Error
+}
+
+func (db *phTherapyService) GetNumberOfTherapiesByDiseaseID(diseaseID int) (count int64, err error) {
+	return count, db.dbConnection.Model(&models.PhTherapy{}).Where("disease_id = ?", diseaseID).Count(&count).Error
 }
 
 // func (db *phTherapyService) UpdatePhTherapy(therapy models.Therapy) (models.Therapy, error) {

@@ -63,7 +63,6 @@ func (db *patientService) GetPatientDetailsFull(id uint) (patientDetails models.
 
 func (db *patientService) GetPatientDetailsForEmployeeID(patientID uint, account_id uint) (patientDetailsPermission []models.PatientDetailsPermission, err error) {
 	return patientDetailsPermission, db.dbConnection.Preload("PatientDetails").
-		Omit("PatientDetails.patient").
 		Joins("JOIN patient_details ON patient_details_permissions.patient_details_id = patient_details.id").
 		Where("patient_details_permissions.account_id = ? AND patient_details.patient_id = ?", account_id, patientID).
 		Find(&patientDetailsPermission).Error

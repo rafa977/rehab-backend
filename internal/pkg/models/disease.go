@@ -14,6 +14,9 @@ type Disease struct {
 	Note                string
 	Date                string
 	InjuryID            uint
+	SessionsPerWeek     uint
+	TotalTherapies      uint
+	StartDate           string
 	Dysfunctions        []Dysfunction         `json:"dysfunctions,omitempty"`
 	ClinicalTestDisease []ClinicalTestDisease `json:"clinicalTestDisease,omitempty"`
 	DiseaseHistory      []DiseaseHistory      `json:"diseaseHistory,omitempty"`

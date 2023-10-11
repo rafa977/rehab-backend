@@ -15,8 +15,9 @@ type PhTherapy struct {
 	SupervisorID      uint
 	AccountSuperVisor Account `gorm:"foreignKey:SupervisorID"`
 	Description       string
+	TherapyNumber     int64
 	Notes             []PhTherapyNote   `json:"phTherapyNotes,omitempty"`
 	TherapyKeys       []PhTherapyKey    `json:"phTherapyKeys,omitempty"`
 	Exercises         []PatientExercise `json:"patientExercise,omitempty"`
-	Protocols         []Protocol
+	Protocols         []Protocol        `json:"protocols,omitempty"`
 }

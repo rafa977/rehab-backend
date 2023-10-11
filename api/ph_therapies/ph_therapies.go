@@ -1,10 +1,14 @@
 package ph_therapies
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"rehab/internal/middleware"
 	"rehab/internal/pkg/handlers"
+	"rehab/internal/pkg/models"
 	"rehab/internal/repository"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -33,22 +37,30 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 	sub := route.PathPrefix("/ph_therapy").Subrouter()
 
 	sub.HandleFunc("/addPhTherapy", middleware.AuthenticationMiddleware(s.addPhTherapy))
-	sub.HandleFunc("/getPhTherapy", middleware.AuthenticationMiddleware(s.getPhTherapy))
+	sub.HandleFunc("/getPhTherapy/{id}", middleware.AuthenticationMiddleware(s.getPhTherapy))
 	sub.HandleFunc("/getPhTherapiesByCompID", middleware.AuthenticationMiddleware(s.getPhTherapiesByCompanyID))
+	sub.HandleFunc("/getAllTherapiesByDisease/{id}", middleware.AuthenticationMiddleware(s.getAllTherapiesByDisease))
 }
 
 func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) {
-	// var phTherapy models.PhTherapy
+	var phTherapy models.PhTherapy
 	// var disease models.Disease
 	// var isOwner = false
 
-	// err := json.NewDecoder(r.Body).Decode(&phTherapy)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
+	err := json.NewDecoder(r.Body).Decode(&phTherapy)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	// phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
+	// TODO: Check Disease ID
+	fmt.Println(phTherapy.DiseaseID)
+	countTh, err := s.phTherapyRepository.GetNumberOfTherapiesByDiseaseID(int(phTherapy.DiseaseID))
+	fmt.Println(countTh)
+
+	phTherapy.TherapyNumber = countTh + 1
+
+	phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
 	// if disease.CompanyID > 0 {
 	// 	// TODO: check company ID if exists and if caller is related
 	// 	compIDs := handlers.GetCompany(r)
@@ -67,36 +79,63 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 	// phTherapy.DysfunctionID = dysfunction.ID
 
 	// phTherapy, err = s.phTherapyRepository.AddPhTherapy(phTherapy)
-	// if err != nil {
-	// 	handlers.ProduceErrorResponse("Something went wrong", w, r)
-	// 	return
-	// }
+	if err != nil {
+		handlers.ProduceErrorResponse("Something went wrong", w, r)
+		return
+	}
 	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", "", w, r)
 }
 
 func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) {
-	// var phTherapy models.PhTherapy
+	var phTherapy models.PhTherapy
 
-	// id := r.URL.Query().Get("id")
-	// if id == "" {
-	// 	handlers.ProduceErrorResponse("Please input all required fields.", w, r)
-	// 	return
-	// }
-	// intID, err := strconv.Atoi(id)
+	params := mux.Vars(r)
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
 
-	// phTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
-	// if err != nil {
-	// 	handlers.ProduceErrorResponse(err.Error(), w, r)
-	// 	return
-	// }
+	phTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
 
-	// jsonRetrievedAccount, err := json.Marshal(phTherapy)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	jsonRetrievedAccount, err := json.Marshal(phTherapy)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	// handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), w, r)
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+}
+
+func (s *phTherapyService) getAllTherapiesByDisease(w http.ResponseWriter, r *http.Request) {
+	var phTherapy []models.PhTherapy
+
+	params := mux.Vars(r)
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, err := strconv.Atoi(id)
+
+	phTherapy, err = s.phTherapyRepository.GetAllTherapiesByDiseaseID(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(phTherapy)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
 func (s *phTherapyService) getPhTherapiesByCompanyID(w http.ResponseWriter, r *http.Request) {
