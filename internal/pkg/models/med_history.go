@@ -18,4 +18,12 @@ type MedHistory struct {
 	Injuries          []Injury           `json:"injuries,omitempty"`
 	PersonalAllergies []PersonalAllergy  `json:"personalAllergies,omitempty"`
 	PersonalDisorders []PersonalDisorder `json:"persnoalDisorders,omitempty"`
+	Surgeries         []Surgery          `json:"surgeries,omitempty"`
+
+	//Surgeries
+	//Old Injuries
+	//Allergies
+	//Drug Treatments
+	//Painkillers
+	//HealthIssues
 }

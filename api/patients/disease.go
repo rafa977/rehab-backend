@@ -35,6 +35,9 @@ func (s *diseaseService) Handle(route *mux.Router) {
 	sub.HandleFunc("/getDiseasesPDID", middleware.AuthenticationMiddleware(s.getDiseasesPDID))
 	sub.HandleFunc("/deleteDisease", middleware.AuthenticationMiddleware(s.deleteDisease))
 	// sub.HandleFunc("/updateDysfunction", middleware.AuthenticationMiddleware(s.updateDysfunction))
+
+	sub.HandleFunc("/getDiseaseHistory/{id}", middleware.AuthenticationMiddleware(s.getDiseaseHistory))
+
 }
 
 func (s *diseaseService) getDisease(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +65,49 @@ func (s *diseaseService) getDisease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonRetrieved, err := json.Marshal(disease)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
+}
+
+func (s *diseaseService) getDiseaseHistory(w http.ResponseWriter, r *http.Request) {
+	var diseaseHistory []models.DiseaseHistory
+
+	// Current account id
+	// accountId := gcontext.Get(r, "id").(uint)
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	// Convert string parameter to uint
+	diseaseID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	// compIDs := gcontext.Get(r, "compIDs").([]uint)
+
+	// validateCompany, validationError := s.diseaseRepository.CheckDysfunctionCompany(compIDs, intID)
+	// if !validateCompany {
+	// 	handlers.ProduceErrorResponse(validationError, w, r)
+	// 	return
+	// }
+
+	diseaseHistory, err = s.diseaseRepository.GetDiseaseHistory(diseaseID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	jsonRetrieved, err := json.Marshal(diseaseHistory)
 	if err != nil {
 		fmt.Println(err)
 		return

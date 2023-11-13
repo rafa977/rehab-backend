@@ -54,7 +54,7 @@ func (db *patientService) GetPatientDetailsByCompanyID(companyId int) (patientDe
 }
 
 func (db *patientService) GetPatientDetailsByPatientID(patientId uint) (patientDetails []models.PatientDetails, err error) {
-	return patientDetails, db.dbConnection.Where("patient_id = ? ", patientId).Find(&patientDetails).Error
+	return patientDetails, db.dbConnection.Where("patient_id = ? ", patientId).Order("created_at desc").Find(&patientDetails).Error
 }
 
 func (db *patientService) GetPatientDetailsFull(id uint) (patientDetails models.PatientDetails, err error) {
@@ -78,10 +78,10 @@ func (db *patientService) AddPatientDetails(patient models.PatientDetails) (mode
 
 func (db *patientService) UpdatePatientDetails(patient models.PatientDetails) (models.PatientDetails, error) {
 	var oldPatient models.PatientDetails
-	if err := db.dbConnection.First(&oldPatient, patient.ID).Error; err != nil {
+	if err := db.dbConnection.Preload("Diseases").Preload("Diseases.ClinicalTestDisease.ClinicalTests").First(&oldPatient, patient.ID).Error; err != nil {
 		return oldPatient, err
 	}
-	return patient, db.dbConnection.Model(&patient).Updates(&patient).Error
+	return patient, db.dbConnection.Session(&gorm.Session{FullSaveAssociations: true}).Model(&patient).Updates(&patient).Error
 }
 
 func (db *patientService) CheckPatientByPatientDetailsID(id uint, compIDs []uint) (bool, string) {

@@ -8,7 +8,7 @@ type ClinicalTestDisease struct {
 	gorm.Model
 
 	DiseaseID       uint
-	Disease         Disease `validate:"-"`
+	Disease         Disease `gorm:"-" validate:"-" `
 	ClinicalTestsID uint
 	ClinicalTests   ClinicalTests `json:"clinicalTests" validate:"-"`
 	Position        string

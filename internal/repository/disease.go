@@ -14,6 +14,9 @@ type DiseaseRepository interface {
 	AddDisease(models.Disease) (models.Disease, error)
 	DeleteDisease(int) (bool, error)
 	UpdateDisease(models.Disease) (models.Disease, error)
+
+	GetDiseaseHistory(uint) ([]models.DiseaseHistory, error)
+
 	// CheckPatientDetails(uint, uint) (bool, string)
 	// CheckPatientDetailsOwning(int, []uint) (bool, string)
 	// CheckDysfunctionCompany([]uint, int) (bool, string)
@@ -51,6 +54,10 @@ func (db *diseaseService) UpdateDisease(clinical models.Disease) (models.Disease
 
 func (db *diseaseService) DeleteDisease(id int) (bool, error) {
 	return true, db.dbConnection.Delete(&models.Disease{}, id).Error
+}
+
+func (db *diseaseService) GetDiseaseHistory(id uint) (history []models.DiseaseHistory, err error) {
+	return history, db.dbConnection.Where("disease_id = ?", id).Find(&history).Error
 }
 
 // // function to check if the user is under the same company where the dysfunction/category is registered

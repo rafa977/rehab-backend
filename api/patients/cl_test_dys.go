@@ -31,10 +31,10 @@ func (s *clTestDisService) RegisterHandlers(route *mux.Router) {
 }
 
 func (s *clTestDisService) Handle(route *mux.Router) {
-	sub := route.PathPrefix("/clinicalTestDisfunction").Subrouter()
+	sub := route.PathPrefix("/clinicalTestDisease").Subrouter()
 
 	sub.HandleFunc("/getClTestDis", middleware.AuthenticationMiddleware(s.getClTestDis))
-	sub.HandleFunc("/getClTestDisByDisID", middleware.AuthenticationMiddleware(s.getClTestDisByDiseaseID))
+	sub.HandleFunc("/getClTestDisByDisID/{id}", middleware.AuthenticationMiddleware(s.getClTestDisByDiseaseID))
 	sub.HandleFunc("/deleteClTestDis", middleware.AuthenticationMiddleware(s.deleteClTestDis))
 	sub.HandleFunc("/addClTestDis", middleware.AuthenticationMiddleware(s.addClTestDis))
 	sub.HandleFunc("/updateClTestDis", middleware.AuthenticationMiddleware(s.updateClTestDis))
@@ -77,23 +77,34 @@ func (s *clTestDisService) addClTestDis(w http.ResponseWriter, r *http.Request) 
 func (s *clTestDisService) getClTestDisByDiseaseID(w http.ResponseWriter, r *http.Request) {
 	var clinicalTest []models.ClinicalTestDisease
 
-	id := r.URL.Query().Get("id")
+	// // Current account id
+	// accountId := gcontext.Get(r, "id").(uint)
+
+	params := mux.Vars(r)
+
+	id := params["id"]
 	if id == "" {
 		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
 		return
 	}
 
+	// Convert string parameter to uint
+	diseaseID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
 	compIDs := handlers.GetCompany(r)
-	intID, err := strconv.Atoi(id)
 
 	// TODO: check company ID if exists and if caller is related
-	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckDiseaseCompanyClinical(compIDs, intID)
+	validCompanyID, validCompanyIDError := s.clinicalRepository.CheckDiseaseCompanyClinical(compIDs, diseaseID)
 	if !validCompanyID {
 		handlers.ProduceErrorResponse(validCompanyIDError, w, r)
 		return
 	}
 
-	clinicalTest, err = s.clinicalRepository.GetClTestDisByDisID(intID)
+	clinicalTest, err = s.clinicalRepository.GetClTestDisByDisID(diseaseID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return

@@ -46,8 +46,11 @@ func main() {
 	diseaseService := patients.NewDiseaseService()
 	diseaseService.RegisterHandlers(router)
 
-	clTestDysService := patients.NewClTestDisService()
-	clTestDysService.RegisterHandlers(router)
+	clTestDisService := patients.NewClTestDisService()
+	clTestDisService.RegisterHandlers(router)
+
+	medHistoryService := patients.NewMedHistoryService()
+	medHistoryService.RegisterMedHistoryHandlers(router)
 
 	handlers.ListenRoute(router)
 }

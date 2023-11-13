@@ -13,7 +13,6 @@ type Disease struct {
 	Description         string
 	Note                string
 	Date                string
-	InjuryID            uint
 	SessionsPerWeek     uint
 	TotalTherapies      uint
 	StartDate           string

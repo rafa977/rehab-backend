@@ -12,11 +12,11 @@ import (
 // ClTestDysRepository --> Interface to ClTestDysRepository
 type ClTestDisRepository interface {
 	GetClTestDis(int) (models.ClinicalTestDisease, error)
-	GetClTestDisByDisID(int) ([]models.ClinicalTestDisease, error)
+	GetClTestDisByDisID(uint) ([]models.ClinicalTestDisease, error)
 	DeleteClTestDis(int) (bool, error)
 	AddClTestDis(models.ClinicalTestDisease) (models.ClinicalTestDisease, error)
 	UpdateClTestDis(models.ClinicalTestDisease) (models.ClinicalTestDisease, error)
-	CheckDiseaseCompanyClinical([]uint, int) (bool, string)
+	CheckDiseaseCompanyClinical([]uint, uint) (bool, string)
 	CheckCompany([]uint, models.ClinicalTestDisease) (bool, string)
 }
 
@@ -35,8 +35,8 @@ func (db *clTestDisService) GetClTestDis(id int) (clinical models.ClinicalTestDi
 	return clinical, db.dbConnection.Preload("Patient").First(&clinical, id).Error
 }
 
-func (db *clTestDisService) GetClTestDisByDisID(id int) (tests []models.ClinicalTestDisease, err error) {
-	return tests, db.dbConnection.Where("disease_id = ?", id).Find(&tests).Error
+func (db *clTestDisService) GetClTestDisByDisID(id uint) (tests []models.ClinicalTestDisease, err error) {
+	return tests, db.dbConnection.Preload("ClinicalTests").Where("disease_id = ?", id).Find(&tests).Error
 }
 
 func (db *clTestDisService) AddClTestDis(test models.ClinicalTestDisease) (models.ClinicalTestDisease, error) {
@@ -55,12 +55,12 @@ func (db *clTestDisService) DeleteClTestDis(id int) (bool, error) {
 }
 
 // function to check if the user is under the same company where the disease/category is registered
-func (db *clTestDisService) CheckDiseaseCompanyClinical(compIDs []uint, diseaseID int) (bool, string) {
+func (db *clTestDisService) CheckDiseaseCompanyClinical(compIDs []uint, diseaseID uint) (bool, string) {
 
 	var diseaseCompanyID uint
 
 	// Execute the raw SQL query
-	query := "select company_id from patients p where p.id = (select patient_id from patient_details pd where pd.id = (select patient_details_id from disease d where d.id = ?))"
+	query := "select company_id from patients p where p.id = (select patient_id from patient_details pd where pd.id = (select patient_details_id from diseases d where d.id = ?))"
 	result := db.dbConnection.Raw(query, diseaseID).Scan(&diseaseCompanyID)
 	if result.Error != nil {
 		var msg string
