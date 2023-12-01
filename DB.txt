@@ -1,0 +1,6 @@
+
+?WyPnhkyy+_LjU9U
+
+GRANT ALL PRIVILEGES ON DATABASE rehab TO rehab_ac;
+
+CREATE USER rehab_ac WITH PASSWORD '2WyPnhkyy+LjU9U';
