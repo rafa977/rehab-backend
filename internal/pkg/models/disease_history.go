@@ -8,6 +8,6 @@ type DysfunctionHistory struct {
 	gorm.Model
 
 	DysfunctionID uint
-	Dysfunction   Dysfunction
+	Dysfunction   *Dysfunction
 	Note          string
 }

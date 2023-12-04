@@ -23,7 +23,6 @@ type PatientDetailRepository interface {
 	GetPatientDetailsForEmployeeID(uint, uint) ([]models.PatientDetailsPermission, error)
 
 	CheckPatientByPatientDetailsID(uint, []uint) (bool, string)
-	CheckPatientByDiseaseID(uint, []uint) (bool, string)
 
 	AddPatientDetailsPermission(models.PatientDetailsPermission) (models.PatientDetailsPermission, error)
 	GetPatientDetailsPermission(uint, uint) (models.PatientDetailsPermission, error)
@@ -58,7 +57,7 @@ func (db *patientService) GetPatientDetailsByPatientID(patientId uint) (patientD
 }
 
 func (db *patientService) GetPatientDetailsFull(id uint) (patientDetails models.PatientDetails, err error) {
-	return patientDetails, db.dbConnection.Preload("Diseases").First(&patientDetails, id).Error
+	return patientDetails, db.dbConnection.First(&patientDetails, id).Error
 }
 
 func (db *patientService) GetPatientDetailsForEmployeeID(patientID uint, account_id uint) (patientDetailsPermission []models.PatientDetailsPermission, err error) {
@@ -103,36 +102,6 @@ func (db *patientService) CheckPatientByPatientDetailsID(id uint, compIDs []uint
 	for _, id := range compIDs {
 
 		if patientDetails.Patient.CompanyID == id {
-			isOwner = true
-		}
-	}
-
-	if !isOwner {
-		return false, "Patient does not belong to your company"
-	}
-
-	return true, ""
-}
-
-func (db *patientService) CheckPatientByDiseaseID(id uint, compIDs []uint) (bool, string) {
-
-	var disease models.Disease
-
-	var err = db.dbConnection.Preload("PatientDetails").Preload("PatientDetails.Patient").First(&disease, id).Error
-	if err != nil {
-		var msg string
-		if strings.Contains(err.Error(), "record not found") {
-			msg = "Patient details do not exist"
-		} else {
-			msg = "Bad Request"
-		}
-		return false, msg
-	}
-
-	var isOwner = false
-	for _, id := range compIDs {
-
-		if disease.PatientDetails.Patient.CompanyID == id {
 			isOwner = true
 		}
 	}

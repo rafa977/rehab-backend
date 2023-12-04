@@ -6,11 +6,11 @@ import (
 
 type MedHistoryPermission struct {
 	gorm.Model
-	AccountID    uint
-	Account      Account `json:"-"`
-	FromDate     string  `json:"from_date"`
-	ToDate       string  `json:"to_date"`
-	Access       bool
-	MedHistoryID uint
-	MedHistory   MedHistory
+	AccountID    uint        `json:"accountId"`
+	Account      *Account    `json:"-"`
+	FromDate     string      `json:"fromDate"`
+	ToDate       string      `json:"toDate"`
+	Access       bool        `json:"access"`
+	MedHistoryID uint        `json:"medHistoryId"`
+	MedHistory   *MedHistory `json:"medHistory"`
 }

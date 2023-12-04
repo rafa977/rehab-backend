@@ -54,8 +54,7 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// TODO: Check Disease ID
-	fmt.Println(phTherapy.DiseaseID)
-	countTh, err := s.phTherapyRepository.GetNumberOfTherapiesByDiseaseID(int(phTherapy.DiseaseID))
+	countTh, err := s.phTherapyRepository.GetNumberOfTherapiesByDiseaseID(int(phTherapy.PatientDetailsID))
 	fmt.Println(countTh)
 
 	phTherapy.TherapyNumber = countTh + 1

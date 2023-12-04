@@ -7,12 +7,14 @@ import (
 type Dysfunction struct {
 	gorm.Model
 
-	DiseaseID          uint    `json:"diseaseId" validate:"required"`
-	Disease            Disease `json:"disease" validate:"-"`
-	Dysfunction        string
-	Description        string
-	Note               string
-	Date               string
-	InjuryID           uint
+	PatientDetailsID   uint            `json:"patientDetailsId" validate:"required"`
+	PatientDetails     *PatientDetails `json:"patientDetails" validate:"-"`
+	Dysfunction        string          `json:"dysfunction"`
+	Description        string          `json:"description"`
+	Note               string          `json:"note"`
+	Date               string          `json:"date"`
+	InjuryID           uint            `json:"injuryId"`
+	Highlight          bool            `json:"highlight"`
+	Weight             float32         `json:"weight"`
 	DysfunctionHistory []DysfunctionHistory
 }

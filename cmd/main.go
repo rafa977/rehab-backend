@@ -16,12 +16,6 @@ func main() {
 	router := handlers.NewRouter()
 	router.Use(corsMiddleware)
 
-	// queries := database.New(postgres.DB)
-	// authorService := accounts.NewService()
-
-	// authorService.RegisterHandlers()
-
-	// queries := database.New(postgres.DB)
 	patientService := patients.NewService()
 	patientService.RegisterHandlers(router)
 
@@ -43,14 +37,14 @@ func main() {
 	generalService := general.NewService()
 	generalService.RegisterHandlers(router)
 
-	diseaseService := patients.NewDiseaseService()
-	diseaseService.RegisterHandlers(router)
-
 	clTestDisService := patients.NewClTestDisService()
 	clTestDisService.RegisterHandlers(router)
 
 	medHistoryService := patients.NewMedHistoryService()
 	medHistoryService.RegisterMedHistoryHandlers(router)
+
+	highlightService := general.NewHighlightService()
+	highlightService.RegisterHandlers(router)
 
 	handlers.ListenRoute(router)
 }

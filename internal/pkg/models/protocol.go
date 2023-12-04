@@ -10,4 +10,6 @@ type Protocol struct {
 	Timetable   string
 	Expectation string
 	Result      string
+	Highlight   bool    `json:"highlight"`
+	Weight      float32 `json:"weight"`
 }

@@ -7,10 +7,10 @@ import (
 type PatientDetailsPermission struct {
 	gorm.Model
 	AccountID        uint
-	Account          Account `json:"-"`
-	FromDate         string  `json:"from_date"`
-	ToDate           string  `json:"to_date"`
-	Access           bool
-	PatientDetailsID uint
-	PatientDetails   PatientDetails
+	Account          *Account `json:"-"`
+	FromDate         string   `json:"fromDate"`
+	ToDate           string   `json:"toDate"`
+	Access           bool     `json:"access"`
+	PatientDetailsID uint     `json:"patientDetailsId"`
+	PatientDetails   *PatientDetails
 }

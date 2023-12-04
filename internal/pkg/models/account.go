@@ -9,19 +9,19 @@ import (
 
 type Account struct {
 	gorm.Model
-	Username  string `gorm:"unique" json:"username" validate:"required"`
-	Password  string `json:"password,omitempty" validate:"required"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	Email     string `gorm:"unique" json:"email" validate:"required,email,max=128"`
-	Address   string
+	Username  string     `gorm:"unique" json:"username" validate:"required"`
+	Password  string     `json:"password,omitempty" validate:"required"`
+	Firstname string     `json:"firstname"`
+	Lastname  string     `json:"lastname"`
+	Email     string     `gorm:"unique" json:"email" validate:"required,email,max=128"`
+	Address   string     `json:"address"`
 	Amka      int        `json:"amka"`
 	Birthdate CustomDate `gorm:"embedded" json:"birthdate"`
 	Job       string     `gorm:"default:null"`
-	RoleID    uint
-	Role      Role `validate:"-"`
-	Relations []Relation
-	LastLogin time.Time `json:"lastlogin"`
+	RoleID    uint       `json:"roleId"`
+	Role      *Role      `validate:"-"`
+	Relations []Relation `json:"relations"`
+	LastLogin time.Time  `json:"lastlogin"`
 }
 
 func NewSmartRegisterLink() SmartRegisterLink {

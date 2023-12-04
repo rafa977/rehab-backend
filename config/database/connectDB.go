@@ -26,7 +26,7 @@ func ConnectDB() *gorm.DB {
 		&models.DrugTreatment{}, &models.Drug{}, &models.PersonalAllergy{}, &models.Allergy{}, &models.PersonalDisorder{}, &models.Disorder{}, &models.Visit{},
 		&models.Injury{}, &models.Dysfunction{}, &models.Protocol{}, &models.PhTherapy{}, &models.PhTherapyNote{}, &models.PhTherapyKey{}, &models.PatientExercise{},
 		&models.ClinicalTestCategory{}, &models.ClinicalTests{}, &models.ClinicalTestDisease{}, &models.DysfunctionHistory{}, &models.Role{}, &models.PatientDetailsPermission{},
-		&models.SmartRegisterLink{}, &models.Signature{}, &models.Disease{}, &models.DiseaseHistory{}, &models.Surgery{},
+		&models.SmartRegisterLink{}, &models.Signature{}, &models.DiseaseHistory{}, &models.Surgery{}, &models.Highlight{},
 	)
 
 	return db

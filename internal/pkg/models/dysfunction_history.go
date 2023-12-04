@@ -7,7 +7,9 @@ import (
 type DiseaseHistory struct {
 	gorm.Model
 
-	DiseaseID uint
-	Disease   Disease
-	Note      string
+	PatientDetailsID uint            `json:"patientDetailsId" validate:"required"`
+	PatientDetails   *PatientDetails `json:"patientDetails" validate:"-"`
+	Highlight        bool            `json:"highlight"`
+	Weight           float32         `json:"weight"`
+	Note             string
 }

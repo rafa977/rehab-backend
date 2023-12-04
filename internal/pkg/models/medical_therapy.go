@@ -17,4 +17,6 @@ type MedicalTherapy struct {
 	Quantity                  string `json:"quantity" `
 	Frequency                 string `json:"frequency" `
 	CreatedOn                 time.Time
+	Highlight                 bool    `json:"highlight"`
+	Weight                    float32 `json:"weight"`
 }
