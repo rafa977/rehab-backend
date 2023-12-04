@@ -39,7 +39,7 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 	sub.HandleFunc("/addPhTherapy", middleware.AuthenticationMiddleware(s.addPhTherapy))
 	sub.HandleFunc("/getPhTherapy/{id}", middleware.AuthenticationMiddleware(s.getPhTherapy))
 	sub.HandleFunc("/getPhTherapiesByCompID", middleware.AuthenticationMiddleware(s.getPhTherapiesByCompanyID))
-	sub.HandleFunc("/getAllTherapiesByDisease/{id}", middleware.AuthenticationMiddleware(s.getAllTherapiesByDisease))
+	sub.HandleFunc("/getAllTherapiesByPatientDetails/{id}", middleware.AuthenticationMiddleware(s.getAllTherapiesByPatientDetails))
 }
 
 func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +111,7 @@ func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) 
 	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
 }
 
-func (s *phTherapyService) getAllTherapiesByDisease(w http.ResponseWriter, r *http.Request) {
+func (s *phTherapyService) getAllTherapiesByPatientDetails(w http.ResponseWriter, r *http.Request) {
 	var phTherapy []models.PhTherapy
 
 	params := mux.Vars(r)
@@ -122,7 +122,7 @@ func (s *phTherapyService) getAllTherapiesByDisease(w http.ResponseWriter, r *ht
 	}
 	intID, err := strconv.Atoi(id)
 
-	phTherapy, err = s.phTherapyRepository.GetAllTherapiesByDiseaseID(intID)
+	phTherapy, err = s.phTherapyRepository.GetAllTherapiesByPatientDetailsID(intID)
 	if err != nil {
 		handlers.ProduceErrorResponse(err.Error(), w, r)
 		return
