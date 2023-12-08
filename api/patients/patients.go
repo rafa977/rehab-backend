@@ -237,15 +237,9 @@ func (s *service) getPatientData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newJsonPatient, err := json.Marshal(patientEmployee)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		handlers.ProduceSuccessResponse(string(newJsonPatient), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patientEmployee, "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patient, "", w, r)
 	}
 }
 
@@ -294,15 +288,9 @@ func (s *service) getAllPatientsByCompanyId(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		newJsonPatients, err := json.Marshal(patientEmployees)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patientEmployees, "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patients, "", w, r)
 	}
 }
 
@@ -332,15 +320,9 @@ func (s *service) getAllPatients(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newJsonPatients, err := json.Marshal(patientEmployees)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patientEmployees, "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patients, "", w, r)
 	}
 }
 
@@ -370,15 +352,9 @@ func (s *service) getAllPatientsDetails(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		newJsonPatients, err := json.Marshal(patientEmployees)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		handlers.ProduceSuccessResponse(string(newJsonPatients), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patientEmployees, "", w, r)
 	} else if roleID == 1 {
-		handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+		handlers.ProduceJsonSuccessResponse(patients, "", w, r)
 	}
 }
 

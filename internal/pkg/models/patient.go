@@ -10,6 +10,10 @@ type Patient struct {
 	Lastname       string           `json:"lastname" validate:"required"`
 	Email          string           `json:"email" validate:"required,email,max=128"`
 	Address        string           `json:"address"`
+	City           string           `json:"city"`
+	Zip            string           `json:"zip"`
+	Country        string           `json:"country"`
+	Sex            string           `json:"sex"`
 	Amka           int              `gorm:"uniqueIndex:idx_companyid_amka"  json:"amka" validate:"required"`
 	Birthdate      CustomDate       `gorm:"embedded" json:"birthdate" validate:"required"`
 	Job            string           `json:"job"`

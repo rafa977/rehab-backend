@@ -35,3 +35,17 @@ func ProduceSuccessResponse(responseMsg string, message string, w http.ResponseW
 	json.NewEncoder(w).Encode(response)
 	return
 }
+
+func ProduceJsonSuccessResponse(responseMsg interface{}, message string, w http.ResponseWriter, r *http.Request) {
+	var response models.ResponseJSON
+
+	currentDate := time.Now().Format("2006-01-02 15:04:05")
+	response.Date = currentDate
+
+	response.Status = "success"
+	response.Message = message
+	response.Response = responseMsg
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+	return
+}
