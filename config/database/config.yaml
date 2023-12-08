@@ -1,6 +1,6 @@
 postgres:
   host: localhost
-  user: postgres
-  password: yours
+  user: rehab_ac
+  password: 2WyPnhkyy+LjU9U
   port: 5432
-  dbname: postgres
+  dbname: rehab
