@@ -2,7 +2,6 @@ package patients
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"rehab/internal/pkg/handlers"
 	"rehab/internal/pkg/models"
@@ -38,7 +37,7 @@ func (s *medHistoryService) MedHistoryHandle(route *mux.Router) {
 
 	sub.HandleFunc("/addMedHistory", middleware.AuthenticationMiddleware(s.addMedHistory))
 	sub.HandleFunc("/updateMedHistory", middleware.AuthenticationMiddleware(s.updateMedHistory))
-	sub.HandleFunc("/getMedHistory/{id}/{type}", middleware.AuthenticationMiddleware(s.getMedHistory))
+	sub.HandleFunc("/getMedHistory/{id}", middleware.AuthenticationMiddleware(s.getMedHistory))
 	// sub.HandleFunc("/getAllMedHistoryCards/{id}", middleware.AuthenticationMiddleware(s.getAllMedHistoryCards))
 
 	// sub.HandleFunc("/deleteMedHistory", middleware.AuthenticationMiddleware(s.deleteMedHistory))
@@ -111,8 +110,6 @@ func (s *medHistoryService) getMedHistory(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	historyType := params["type"]
-
 	// Convert string parameter to uint
 	medHistoryID, err := handlers.ConvertStrToUint(id)
 	if err != nil {
@@ -141,56 +138,16 @@ func (s *medHistoryService) getMedHistory(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if historyType == "a" {
-		medHistory, err = s.medHistoryRepository.GetMedicalHistoryFull(medHistoryID)
-		if err != nil {
-			var msg string
-			if strings.Contains(err.Error(), "record not found") {
-				msg = "No medical history created"
-			} else {
-				msg = "Bad Request"
-			}
-			handlers.ProduceErrorResponse(msg, w, r)
-			return
+	medHistory, err = s.medHistoryRepository.GetMedicalHistoryFull(medHistoryID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "No medical history created"
+		} else {
+			msg = "Bad Request"
 		}
-	} else {
-		var actualType string
-
-		switch historyType {
-		case "allergy":
-			actualType = "PersonalAllergies.Allergy"
-			break
-		case "medtherapy":
-			actualType = "MedicalTherapies"
-			break
-		case "injury":
-			actualType = "Injuries"
-			break
-		case "therapy":
-			actualType = "Therapies"
-			break
-		case "drug":
-			actualType = "DrugTreatments.Drug"
-			break
-		case "disorder":
-			actualType = "PersonalDisorders.Disorder"
-			break
-		case "surgery":
-			actualType = "Surgeries"
-			break
-		}
-
-		medHistory, err = s.medHistoryRepository.GetMedicalHistorySpecific(medHistoryID, actualType)
-		if err != nil {
-			var msg string
-			if strings.Contains(err.Error(), "record not found") {
-				msg = "No medical history created"
-			} else {
-				msg = "Bad Request"
-			}
-			handlers.ProduceErrorResponse(msg, w, r)
-			return
-		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
 	}
 
 	patient, err = s.patientRepository.GetPatient(medHistory.PatientID)
@@ -205,13 +162,7 @@ func (s *medHistoryService) getMedHistory(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(medHistory)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+	handlers.ProduceJsonSuccessResponse(medHistory, "", w, r)
 }
 
 // // Get all Patient Detail Cards based on Patient ID

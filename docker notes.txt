@@ -7,3 +7,73 @@ docker build -t sender . -f ./notification_sender/Dockerfile_sender
 docker build -t <tag> <PATH of context to find> <Dockerfile> 
 
 PATH should be defined according to the current directory
+
+
+http://sdev-nexus.athens.intrasoft-intl.private/nexus/repository/dockerized/cbam
+
+docker login http://sdev-nexus.athens.intrasoft-intl.private:7290/base-images --username intrasoft.kiloudra --password-stdin
+
+[12:05 PM] SAPERAS Charalampos
+hill-bound-per-indeed
+intrasoft.kiloudra
+
+docker login -u intrasoft.kiloudra -p hill-bound-per-indeed sdev-nexus.athens.intrasoft-intl.private:7290/base-images
+
+docker login -u rkiloudi@netcompany-intrasoft.com -p "z$r3aYCTeDxHt.n" container-registry.oracle.com
+docker login container-registry.oracle.com
+
+
+z$r3aYCTeDxHt.n
+
+docker push https://sdev-nexus.athens.intrasoft-intl.private/nexus/repository/dockerized/base-images/cbam:latest
+docker push sdev-nexus.athens.intrasoft-intl.private/nexus/repository/dockerized/app:latest
+docker push sdev-nexus.athens.intrasoft-intl.private/nexus/repository/dockerized/app:latest
+
+
+docker push sdev-nexus.athens.intrasoft-intl.private:7290/base-images/cbam:latest
+docker push sdev-nexus.athens.intrasoft-intl.private:7290/base-images/cbam:spring
+
+docker tag sdev-nexus.athens.intrasoft-intl.private:7290/base-images/oracle-db:latest
+docker push sdev-nexus.athens.intrasoft-intl.private:7290/base-images/oracle-db:latest
+
+docker run -p 8077:8077 imgid
+
+docker pull container-registry.oracle.com/database/enterprise:12.2.0.1-slim
+
+{
+  "insecure-registries" : ["10.240.151.23:7290","sdev-nexus.athens.intrasoft-intl.private:7290"]
+}
+
+
+kubectl create secret generic oracle-db-secret \
+  --from-literal='password=dbpassWordForDb1!'
+
+kubectl create secret docker-registry docker-secret \
+        --docker-server=container-registry.oracle.com \
+        --docker-username=rkiloudi@netcompany-intrasoft.com \
+        --docker-password="z$r3aYCTeDxHt.n" \
+        --docker-email=rkiloudi@netcompany-intrasoft.com \
+        -n default
+
+
+kubectl create secret docker-registry nexus-credentials \
+  --docker-server=sdev-nexus.athens.intrasoft-intl.private:7290/base-images \
+  --docker-username=intrasoft.kiloudra \
+  --docker-password=hill-bound-per-indeed
+
+{
+        insecure-registries" : ["sdev-nexus.athens.intrasoft-intl.private:7290"]
+}
+
+
+mirrors:
+  docker.io:
+    endpoint:
+      - http:sdev-nexus.athens.intrasoft-intl.private:7290/v2
+configs:
+  "sdev-nexus.athens.intrasoft-intl.private:7290":
+    auth:
+      username: intrasoft.kiloudra 
+      password: hill-bound-per-indeed
+	  
+	 

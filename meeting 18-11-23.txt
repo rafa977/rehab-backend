@@ -29,3 +29,17 @@ Screening
 	clinical test 
 	
 	istoriko --> arxikh kartela (shmeiwseis)
+	
+	
+	
+git clone https://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@github.com/rafa977/rehab-backend.git
+
+
+sudo -i -u postgres
+
+List of databases ==> \l
+                                 
+ss -tplna | grep 8082
+
+postgres=# \c dvdrental
+You are now connected to database "dvdrental" as user "postgres".

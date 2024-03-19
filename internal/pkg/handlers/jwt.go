@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -36,7 +35,6 @@ func GenerateJWT(username string, id uint, compIDs []uint, roleID uint) (string,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	fmt.Println(claims)
 
 	tokenString, err := token.SignedString(sampleSecretKey)
 	if err != nil {

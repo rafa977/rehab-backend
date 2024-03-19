@@ -34,7 +34,9 @@ func (db *medHistoryService) AddMedHistory(history models.MedHistory) (models.Me
 }
 
 func (db *medHistoryService) GetMedicalHistoryFull(id uint) (history models.MedHistory, err error) {
-	return history, db.dbConnection.Preload("PersonalAllergies").First(&history, id).Error
+	return history, db.dbConnection.Preload("Company").Preload("AddedBy").Preload("Therapies").Preload("MedicalTherapies").
+		Preload("DrugTreatments").Preload("Injuries").Preload("PersonalAllergies").Preload("PersonalDisorders").
+		Preload("Surgeries").Where("patient_id = ?", id).First(&history).Error
 }
 
 func (db *medHistoryService) GetMedicalHistorySpecific(id uint, historyType string) (history models.MedHistory, err error) {

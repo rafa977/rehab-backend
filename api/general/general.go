@@ -151,7 +151,6 @@ func (s *service) updateDrug(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Println(drug.DrugTitle)
 	drug, err = s.generalRepository.UpdateDrug(drug)
 	if err != nil {
 		var newerr string

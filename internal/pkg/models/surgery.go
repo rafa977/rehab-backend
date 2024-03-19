@@ -13,8 +13,6 @@ type Surgery struct {
 	Diagnosis          string  `json:"diagnosis"`
 	Note               string  `json:"note"`
 	Date               string  `json:"date"`
-	Quantity           string  `json:"quantity"`
-	Frequency          string  `json:"frequency"`
 	Doctor             string  `json:"doctor"`
 	Highlight          bool    `json:"highlight"`
 	Weight             float32 `json:"weight"`

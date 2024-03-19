@@ -426,11 +426,7 @@ func (s *service) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(account.Password)
-
 	passwordValid := checkPasswordHash(account.Password, retrievedAccount.Password)
-	fmt.Println(passwordValid)
-
 	if passwordValid {
 
 		retrievedAccount.LastLogin = time.Now()

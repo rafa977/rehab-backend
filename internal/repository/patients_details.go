@@ -76,10 +76,6 @@ func (db *patientService) AddPatientDetails(patient models.PatientDetails) (mode
 }
 
 func (db *patientService) UpdatePatientDetails(patient models.PatientDetails) (models.PatientDetails, error) {
-	var oldPatient models.PatientDetails
-	if err := db.dbConnection.Preload("Diseases").Preload("Diseases.ClinicalTestDisease.ClinicalTests").First(&oldPatient, patient.ID).Error; err != nil {
-		return oldPatient, err
-	}
 	return patient, db.dbConnection.Session(&gorm.Session{FullSaveAssociations: true}).Model(&patient).Updates(&patient).Error
 }
 

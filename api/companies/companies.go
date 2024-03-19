@@ -233,7 +233,7 @@ func (s *service) getRelationIDsByAccountID(w http.ResponseWriter, r *http.Reque
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	fmt.Println(relationIDs)
+
 	jsonRetrievedAccount, err := json.Marshal(relationIDs)
 	if err != nil {
 		fmt.Println(err)
