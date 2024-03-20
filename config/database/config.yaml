@@ -1,7 +1,19 @@
+# postgres:
+#   host: localhost
+#   user: rehab_ac
+#   password: 2WyPnhkyy+LjU9U
+#   port: 5432
+#   dbname: rehab
+
 postgres:
   host: localhost
+<<<<<<< Updated upstream
   user: postgres
   password: yours
+=======
+  user: rehab
+  password: password
+>>>>>>> Stashed changes
   port: 5432
   dbname: postgres
 
