@@ -46,6 +46,8 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/getAllPatients", middleware.AuthenticationMiddleware(s.getAllPatients))
 	sub.HandleFunc("/getAllPatientsCompanyID/{id}", middleware.AuthenticationMiddleware(s.getAllPatientsByCompanyId))
 	sub.HandleFunc("/getAllPatientsDetails", middleware.AuthenticationMiddleware(s.getAllPatientsDetails))
+
+	sub.HandleFunc("/addGenericNote/{id}", middleware.AuthenticationMiddleware(s.addGenericNote))
 }
 
 func (s *service) patientRegistration(w http.ResponseWriter, r *http.Request) {
@@ -387,4 +389,77 @@ func (s *service) getPatientDataKeyword(w http.ResponseWriter, r *http.Request) 
 	}
 
 	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+}
+
+func (s *service) addGenericNote(w http.ResponseWriter, r *http.Request) {
+	var note models.GenericNote
+	var patient models.Patient
+
+	err := json.NewDecoder(r.Body).Decode(&note)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	// Convert string parameter to uint
+	patientID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	currentUserId := gcontext.Get(r, "id").(uint)
+
+	patient, err = s.patientRepository.GetPatient(patientID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "You are not authorized to access these data!"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	// TODO: check company ID if exists and if caller is related
+	compIDs := handlers.GetCompany(r)
+
+	if len(compIDs) == 0 {
+		handlers.ProduceErrorResponse("Please register your company", w, r)
+		return
+	}
+
+	// check patient id exists and is under same company
+	isPatientValid, validationError := s.patientRepository.CheckPatient(patient.ID, compIDs)
+	if !isPatientValid {
+		handlers.ProduceErrorResponse(validationError, w, r)
+		return
+	}
+
+	// for _, note := range notes {
+	note.AddedByID = currentUserId
+	patient.GenericNotes = append(patient.GenericNotes, note)
+	// }
+
+	patient, err = s.patientRepository.UpdatePatient(patient)
+	if err != nil {
+		var newerr string
+		if strings.Contains(err.Error(), "users_company_email_key") {
+			newerr = "user already exists!"
+		} else {
+			newerr = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(newerr, w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Update of Patient - Successful", "", w, r)
 }

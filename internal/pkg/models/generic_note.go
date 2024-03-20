@@ -7,6 +7,7 @@ import (
 type GenericNote struct {
 	gorm.Model
 
+	PatientID   uint
 	Description string   `json:"description"`
 	Note        string   `json:"note"`
 	AddedByID   uint     `json:"addedById"`

@@ -250,13 +250,14 @@ func (s *detailsService) getAllPatientDetailsCards(w http.ResponseWriter, r *htt
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(patientDetails)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// jsonRetrievedAccount, err := json.Marshal(patientDetails)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+	// handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+	handlers.ProduceJsonSuccessResponse(patientDetails, "", w, r)
 }
 
 func (s *detailsService) updatePatientDetails(w http.ResponseWriter, r *http.Request) {

@@ -56,7 +56,7 @@ func (db *patientService) DeletePatient(id uint) (bool, error) {
 }
 
 func (db *patientService) GetPatient(id uint) (patient models.Patient, err error) {
-	return patient, db.dbConnection.First(&patient, id).Error
+	return patient, db.dbConnection.Preload("GenericNotes").First(&patient, id).Error
 }
 
 func (db *patientService) GetPatientByIdAndCompanyID(patientId uint, companyId uint) (models.Patient, error) {

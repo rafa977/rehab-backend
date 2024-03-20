@@ -28,6 +28,7 @@ type Patient struct {
 	Company        *Company         `validate:"-"`
 	AddedByID      uint             // New foreign key
 	AddedBy        *Account         `gorm:"foreignkey:AddedByID" validate:"-" json:"addedBy,omitempty"` // AddedBy relationship
+	GenericNotes   []GenericNote    `json:"genericNotes"`
 	PatientDetails []PatientDetails `json:"-"`
 	TherapyHistory []TherapyHistory `json:"therapyHistory,omitempty"`
 }
