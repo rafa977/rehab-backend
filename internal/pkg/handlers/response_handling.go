@@ -43,6 +43,7 @@ func ProduceJsonSuccessResponse(responseMsg interface{}, message string, w http.
 	response.Date = currentDate
 
 	response.Status = "success"
+	response.ResponseCode = 200
 	response.Message = message
 	response.Response = responseMsg
 	w.WriteHeader(http.StatusOK)

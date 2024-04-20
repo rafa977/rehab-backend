@@ -54,6 +54,8 @@ func (s *service) Handle(route *mux.Router) {
 	sub.HandleFunc("/getAccountById", middleware.AuthenticationMiddleware(s.getAccountById))
 	sub.HandleFunc("/getAccount", middleware.AuthenticationMiddleware(s.getAccount))
 
+	sub.HandleFunc("/getAccountsByCompanyId/{id}", middleware.AuthenticationMiddleware(s.getAccountsByCompanyId))
+
 	sub.HandleFunc("/getCompaniesByAccountId", middleware.AuthenticationMiddleware(s.getCompaniesByAccountId))
 	sub.HandleFunc("/deleteAccountById", deleteAccountById)
 }
@@ -507,6 +509,51 @@ func (s *service) getCompaniesByAccountId(w http.ResponseWriter, r *http.Request
 	}
 
 	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+}
+
+func (s *service) getAccountsByCompanyId(w http.ResponseWriter, r *http.Request) {
+	var accounts []models.Account
+
+	// Current account id
+	// accountId := gcontext.Get(r, "id").(uint)
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	// Convert string parameter to uint
+	companyID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	accounts, err = s.repository.GetAccountsByCompanyId(companyID)
+	if err != nil {
+		var msg string
+		if strings.Contains(err.Error(), "record not found") {
+			msg = "No patient cards created"
+		} else {
+			msg = "Bad Request"
+		}
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+
+	jsonRetrievedAccount, err := json.Marshal(accounts)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	var accountsInt []models.AccountInt
+
+	json.Unmarshal(jsonRetrievedAccount, &accountsInt)
+
+	handlers.ProduceJsonSuccessResponse(accountsInt, "", w, r)
 }
 
 func (s *service) getAccountById(w http.ResponseWriter, r *http.Request) {

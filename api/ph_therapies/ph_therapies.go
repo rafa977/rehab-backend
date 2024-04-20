@@ -37,6 +37,7 @@ func (s *phTherapyService) DetailHandle(route *mux.Router) {
 	sub := route.PathPrefix("/ph_therapy").Subrouter()
 
 	sub.HandleFunc("/addPhTherapy", middleware.AuthenticationMiddleware(s.addPhTherapy))
+	sub.HandleFunc("/updateTherapy/{id}", middleware.AuthenticationMiddleware(s.updateTherapy))
 	sub.HandleFunc("/getPhTherapy/{id}", middleware.AuthenticationMiddleware(s.getPhTherapy))
 	sub.HandleFunc("/getPhTherapiesByCompID", middleware.AuthenticationMiddleware(s.getPhTherapiesByCompanyID))
 	sub.HandleFunc("/getAllTherapiesByPatientDetails/{id}", middleware.AuthenticationMiddleware(s.getAllTherapiesByPatientDetails))
@@ -54,7 +55,7 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// TODO: Check Disease ID
-	countTh, err := s.phTherapyRepository.GetNumberOfTherapiesByDiseaseID(int(phTherapy.PatientDetailsID))
+	countTh, _ := s.phTherapyRepository.GetNumberOfTherapiesByPatientDetailsID(int(phTherapy.PatientDetailsID))
 	fmt.Println(countTh)
 
 	phTherapy.TherapyNumber = countTh + 1
@@ -85,6 +86,53 @@ func (s *phTherapyService) addPhTherapy(w http.ResponseWriter, r *http.Request) 
 	handlers.ProduceSuccessResponse("Registration of Therapy - Successful", "", w, r)
 }
 
+func (s *phTherapyService) updateTherapy(w http.ResponseWriter, r *http.Request) {
+	var updatedPhTherapy models.PhTherapy
+	var retrievedTherapy models.PhTherapy
+
+	params := mux.Vars(r)
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+	intID, _ := strconv.Atoi(id)
+
+	err := json.NewDecoder(r.Body).Decode(&updatedPhTherapy)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	// isValid, errors := handlers.ValidateInputs(updatedPhTherapy)
+	// if !isValid {
+	// 	for _, fieldError := range errors {
+	// 		handlers.ProduceErrorResponse(fieldError, w, r)
+	// 		return
+	// 	}
+	// }
+
+	retrievedTherapy, err = s.phTherapyRepository.GetPhTherapy(intID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	retrievedTherapy.EmployeeID = updatedPhTherapy.EmployeeID
+	retrievedTherapy.SupervisorID = updatedPhTherapy.SupervisorID
+	retrievedTherapy.Description = updatedPhTherapy.Description
+	retrievedTherapy.Notes = updatedPhTherapy.Notes
+	retrievedTherapy.TherapyKeys = updatedPhTherapy.TherapyKeys
+
+	_, err = s.phTherapyRepository.UpdatePhTherapy(retrievedTherapy)
+	if err != nil {
+		msg := "Bad Request"
+		handlers.ProduceErrorResponse(msg, w, r)
+		return
+	}
+	handlers.ProduceJsonSuccessResponse("Update of Account - Successful", "", w, r)
+}
+
 func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) {
 	var phTherapy models.PhTherapy
 
@@ -102,13 +150,7 @@ func (s *phTherapyService) getPhTherapy(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(phTherapy)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+	handlers.ProduceJsonSuccessResponse(phTherapy, "", w, r)
 }
 
 func (s *phTherapyService) getAllTherapiesByPatientDetails(w http.ResponseWriter, r *http.Request) {

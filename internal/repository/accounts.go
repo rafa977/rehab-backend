@@ -13,6 +13,8 @@ type AccountsRepository interface {
 	GetAccountByIDWithPassword(uint) (models.Account, error)
 	GetAccountByUsernameForLogin(string) (models.Account, error)
 	GetAccountByUsername(string) (models.Account, error)
+	GetAccountsByCompanyId(uint) ([]models.Account, error)
+
 	UpdateAccount(models.Account) (models.Account, error)
 	AddUser(models.Account) (models.Account, error)
 	GetCompanyByAccountID(uint) models.Company
@@ -50,6 +52,15 @@ func (db *accountService) GetCompanyByAccountByID(id int) (account models.Accoun
 
 func (db *accountService) GetAccountByUsernameForLogin(username string) (account models.Account, err error) {
 	return account, db.dbConnection.Where("username = ?", username).First(&account).Error
+}
+
+func (db *accountService) GetAccountsByCompanyId(id uint) (accounts []models.Account, err error) {
+	return accounts, db.dbConnection.
+		Joins("JOIN relations ON accounts.id = relations.account_id").
+		Joins("JOIN relation_companies ON relations.id = relation_companies.relation_id").
+		Where("relation_companies.company_id = ?", id).
+		Select("accounts.*"). // Selects only fields from the accounts table
+		Find(&accounts).Error
 }
 
 func (db *accountService) GetAccountByIDWithPassword(id uint) (account models.Account, err error) {

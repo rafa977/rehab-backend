@@ -1,6 +1,7 @@
 package models
 
 type AccountInt struct {
+	ID        uint       `json:"id"`
 	Firstname string     `json:"firstname"`
 	Lastname  string     `json:"lastname"`
 	Address   string     `json:"address"`

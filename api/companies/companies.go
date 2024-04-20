@@ -198,13 +198,7 @@ func (s *service) getCompaniesDetailsDataByAccountID(w http.ResponseWriter, r *h
 
 	retrievedCompanies := s.repository.GetCompaniesDetailsByAccountID(id)
 
-	jsonRetrieved, err := json.Marshal(retrievedCompanies)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrieved), "", w, r)
+	handlers.ProduceJsonSuccessResponse(retrievedCompanies, "", w, r)
 }
 
 func (s *service) getRelationIDsByAccountID(w http.ResponseWriter, r *http.Request) {

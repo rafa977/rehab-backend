@@ -164,13 +164,7 @@ func (s *detailsService) getPatientDetails(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	jsonRetrievedAccount, err := json.Marshal(patientDetails)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	handlers.ProduceSuccessResponse(string(jsonRetrievedAccount), "", w, r)
+	handlers.ProduceJsonSuccessResponse(patientDetails, "", w, r)
 }
 
 // Get all Patient Detail Cards based on Patient ID

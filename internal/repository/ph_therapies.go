@@ -10,10 +10,11 @@ import (
 // TherapyRepository --> Interface to TherapyRepository
 type PhTherapyRepository interface {
 	AddPhTherapy(models.PhTherapy) (models.PhTherapy, error)
+	UpdatePhTherapy(models.PhTherapy) (models.PhTherapy, error)
 	GetPhTherapy(int) (models.PhTherapy, error)
 	GetPhTherapiesByCompanyID(int) ([]models.PhTherapy, error)
 	GetAllTherapiesByPatientDetailsID(int) ([]models.PhTherapy, error)
-	GetNumberOfTherapiesByDiseaseID(int) (int64, error)
+	GetNumberOfTherapiesByPatientDetailsID(int) (int64, error)
 
 	// DeletePhTherapy(int) (bool, error)
 	// UpdatePhTherapy(models.Therapy) (models.Therapy, error)
@@ -34,6 +35,22 @@ func (db *phTherapyService) AddPhTherapy(phTherapy models.PhTherapy) (models.PhT
 	return phTherapy, db.dbConnection.Create(&phTherapy).Error
 }
 
+func (db *phTherapyService) UpdatePhTherapy(therapy models.PhTherapy) (models.PhTherapy, error) {
+	var phTherapy models.PhTherapy
+	if err := db.dbConnection.Preload("TherapyKeys").First(&phTherapy, therapy.ID).Error; err != nil {
+		return phTherapy, err
+	}
+	return therapy, db.dbConnection.Model(&phTherapy).Updates(&therapy).Error
+}
+
+// func (db *accountService) UpdateAccount(account models.Account) (models.Account, error) {
+// 	var user models.Account
+// 	if err := db.dbConnection.First(&user, account.ID).Error; err != nil {
+// 		return user, err
+// 	}
+// 	return account, db.dbConnection.Model(&user).Updates(&account).Error
+// }
+
 func (db *phTherapyService) GetPhTherapy(id int) (therapy models.PhTherapy, err error) {
 	return therapy, db.dbConnection.Preload("AccountSuperVisor", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
 		Preload("AccountEmployee", func(tx *gorm.DB) *gorm.DB { return tx.Omit("Password") }).
@@ -53,16 +70,9 @@ func (db *phTherapyService) GetAllTherapiesByPatientDetailsID(patientDetailsId i
 		Where("patient_details_id = ?", patientDetailsId).Find(&therapies).Error
 }
 
-func (db *phTherapyService) GetNumberOfTherapiesByDiseaseID(patientDetailsId int) (count int64, err error) {
+func (db *phTherapyService) GetNumberOfTherapiesByPatientDetailsID(patientDetailsId int) (count int64, err error) {
 	return count, db.dbConnection.Model(&models.PhTherapy{}).Where("patient_details_id = ?", patientDetailsId).Count(&count).Error
 }
-
-// func (db *phTherapyService) UpdatePhTherapy(therapy models.Therapy) (models.Therapy, error) {
-// 	if err := db.dbConnection.Preload("User").First(&therapy, therapy.ID).Error; err != nil {
-// 		return therapy, err
-// 	}
-// 	return therapy, db.dbConnection.Preload("User").Model(&therapy).Updates(&therapy).Error
-// }
 
 // func (db *phTherapyService) DeletePhTherapy(id int) (bool, error) {
 // 	return true, db.dbConnection.Delete(&models.Therapy{}, id).Error
