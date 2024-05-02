@@ -42,6 +42,12 @@ func (s *medHistoryService) MedHistoryHandle(route *mux.Router) {
 
 	// sub.HandleFunc("/deleteMedHistory", middleware.AuthenticationMiddleware(s.deleteMedHistory))
 
+	// Surgeries
+	sub.HandleFunc("/deleteSurgery/{id}", middleware.AuthenticationMiddleware(s.deleteSurgeryById))
+
+	// Injuries
+	sub.HandleFunc("/deleteInjury/{id}", middleware.AuthenticationMiddleware(s.deleteInjuryById))
+
 	//TODO:
 	//Give access to a specific account for patient details
 }
@@ -284,20 +290,54 @@ func (s *medHistoryService) updateMedHistory(w http.ResponseWriter, r *http.Requ
 	handlers.ProduceSuccessResponse("Update of Medical History - Successful", "", w, r)
 }
 
-// func (s *medHistoryService) deletePatientDetails(w http.ResponseWriter, r *http.Request) {
+// Surgeries
+func (s *medHistoryService) deleteSurgeryById(w http.ResponseWriter, r *http.Request) {
 
-// 	id := r.URL.Query().Get("id")
-// 	if id == "" {
-// 		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
-// 		return
-// 	}
+	params := mux.Vars(r)
 
-// 	intID, err := strconv.Atoi(id)
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
 
-// 	_, err = s.patientDetailsRepository.DeletePatientDetails(intID)
-// 	if err != nil {
-// 		handlers.ProduceErrorResponse(err.Error(), w, r)
-// 		return
-// 	}
-// 	handlers.ProduceSuccessResponse("Patient Details Delete - Succesfull", "", w, r)
-// }
+	// Convert string parameter to uint
+	surgeryID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	_, err = s.medHistoryRepository.DeleteSurgeryById(surgeryID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Surgery Record Delete - Succesfull", "", w, r)
+}
+
+// Injuries
+func (s *medHistoryService) deleteInjuryById(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+
+	id := params["id"]
+	if id == "" {
+		handlers.ProduceErrorResponse("Please input all required fields.", w, r)
+		return
+	}
+
+	// Convert string parameter to uint
+	surgeryID, err := handlers.ConvertStrToUint(id)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+
+	_, err = s.medHistoryRepository.DeleteInjuryById(surgeryID)
+	if err != nil {
+		handlers.ProduceErrorResponse(err.Error(), w, r)
+		return
+	}
+	handlers.ProduceSuccessResponse("Injury Record Delete - Succesfull", "", w, r)
+}

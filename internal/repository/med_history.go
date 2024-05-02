@@ -16,6 +16,12 @@ type MedHistoryRepository interface {
 
 	AddMedHistoryPermission(models.MedHistoryPermission) (models.MedHistoryPermission, error)
 	GetMedHistoryPermission(uint, uint) (models.MedHistoryPermission, error)
+
+	// Surgeries
+	DeleteSurgeryById(uint) (bool, error)
+
+	// Injuries
+	DeleteInjuryById(uint) (bool, error)
 }
 
 type medHistoryService struct {
@@ -48,7 +54,17 @@ func (db *medHistoryService) UpdateMedicalHistory(history models.MedHistory) (mo
 	if err := db.dbConnection.First(&oldHistory, history.ID).Error; err != nil {
 		return oldHistory, err
 	}
-	return history, db.dbConnection.Model(&history).Updates(&history).Error
+	return history, db.dbConnection.Session(&gorm.Session{FullSaveAssociations: true}).Model(&history).Updates(&history).Error
+}
+
+// Surgeries
+func (db *medHistoryService) DeleteSurgeryById(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.Surgery{}, id).Error
+}
+
+// Injuries
+func (db *medHistoryService) DeleteInjuryById(id uint) (bool, error) {
+	return true, db.dbConnection.Delete(&models.Injury{}, id).Error
 }
 
 ///////////////////////// Medical History Permissions ////////////////////////////////////////////////////////

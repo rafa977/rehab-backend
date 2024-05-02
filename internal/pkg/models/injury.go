@@ -6,10 +6,10 @@ type Injury struct {
 	gorm.Model
 
 	MedHistoryID      uint
-	InjuryTitle       string  `json:"injury_title"`
-	InjuryDescription string  `json:"injury_description"`
-	BpositionID       string  `json:"bposition_id"`
-	InjuryDate        string  `json:"injury_date"`
+	InjuryTitle       string  `json:"injuryTitle"`
+	InjuryDescription string  `json:"injuryDescription"`
+	BpositionID       string  `json:"bpositionId"`
+	InjuryDate        string  `json:"injuryDate"`
 	Highlight         bool    `json:"highlight"`
 	Weight            float32 `json:"weight"`
 }
